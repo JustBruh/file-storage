@@ -50,13 +50,18 @@ class DataTransferProtocol:
             self.name = DataTransferProtocol.REMOVE_COMMAND
             self.filename = args[0]
 
-
-    # RENAME <username> \n
+    # RENAME <filename> <new_file_name> \n
     class RenameRequest(BaseOperation):
         def __init__(self, args):
-            self.name = DataTransferProtocol.RENAME_COMMAND
-            self.new_name = args[0]
+            self.name = DataTransferProtocol.RENAME_FILE_COMMAND
+            self.filename = args[0]
+            self.new_file_name = args[1]
 
+    # RENAME_USER <username> \n
+    class RenameUserRequest(BaseOperation):
+        def __init__(self, args):
+            self.name = DataTransferProtocol.RENAME_USER_COMMAND
+            self.new_name = args[0]
 
     # LIST \n
     class ListRequest(BaseOperation):
@@ -75,27 +80,22 @@ class DataTransferProtocol:
     # 200 \n
     class SuccessResponse(BaseOperation):
         def __init__ (self):
-            self.code = 200
-
-    # 401 \n
-    class UnauthorizedResponse(BaseOperation):
-        def __init__ (self):
-            self.code = 401
+            self.code = 20
 
     # 403 \n
     class ForbiddenResponse(BaseOperation):
         def __init__ (self):
             self.code = 403
 
-    # 404 \n
-    class FileMissingResponse(BaseOperation):
-        def __init__ (self):
-            self.code = 404
-
     # 413 \n
     class LengthLimitExceeded(BaseOperation):
         def __init__ (self):
             self.code = 413
+
+    # 530 \n
+    class UnauthorizedResponse(BaseOperation):
+        def __init__ (self):
+            self.code = 401
 
     # 550 \n
     class FileExistsResponse(BaseOperation):
@@ -115,7 +115,7 @@ class DataTransferProtocol:
     class FileTransferOperation(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.FILE_TRANSFER_COMMAND
-            self.filename = args[0]
+            self.file_name = args[0]
             self.filesize = args[1]
             self.file_modification_time = args[2]
 

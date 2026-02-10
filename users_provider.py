@@ -6,7 +6,7 @@ class UsersProvider:
 
     def authenticate(self, login, password, connection):
         #TODO: Implement authorization, password hash + salt stored within Db
-        user_id, user_password = self.db_provider.get_user_data_by_login(login)
+        user_id, user_password = self.db_provider.get_user_data(login)
 
         if user_password != password:
             return False, "No such login or incorrect password"
