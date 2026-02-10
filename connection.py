@@ -58,6 +58,13 @@ class Connection:
 
         while continue_receiving:
 
+            # If command already stored in buffer
+            header = self.try_retreive_single_header_from_buffer_in()
+
+            if header:
+               continue_receiving = False
+               continue
+
             chunk = self.socket.recv(self.chunk_size)
 
             if not chunk:
@@ -68,17 +75,11 @@ class Connection:
             if not update_successfull:
                 return False, message
             
-            header = self.try_retreive_single_header_from_buffer_in()
-
-            if header:
-               continue_receiving = False
-               continue
-            
         self.status = Connection.STATUS_IDLE
 
         return header
         
-    def receive_and_store_payload(self, store_payload_obj, payload_size):
+    def receive_and_process_payload(self, payload_processor_func, payload_size):
         self.status = Connection.STATUS_RECEIVING_PAYLOAD
 
         written_size = 0
@@ -103,7 +104,7 @@ class Connection:
 
             # Payload received, and subsequent command/commands are received, which would be saved to buffer
             if exceed_limit_by > 0:
-                store_payload_obj.write(chunk[:exceed_limit_by])
+                payload_processor_func((chunk[:exceed_limit_by]))
 
                 #TODO: Check if there are cases, when buffer would be filled with trash, and no new command could be processed, due to buffer overflow
                 update_successfull, message = self.update_header_buffer_in(chunk[exceed_limit_by:])
@@ -119,12 +120,12 @@ class Connection:
 
                 continue
 
-            # Common case, write the whole chunk
-            store_payload_obj.write(chunk)
+            # Common case, process the whole chunk
+            payload_processor_func(chunk)
             
             # Whole payload received, no subsequent data received
             if exceed_limit_by == 0:
-                store_payload_obj.write(chunk[:exceed_limit_by])
+                payload_processor_func(chunk[:exceed_limit_by])
 
                 continue_receiving = False
 
@@ -146,16 +147,25 @@ class Connection:
     
         self.status = Connection.STATUS_IDLE
 
-        return res
+        return res[:-1]
+    
+    # For Handling single-value responses either from server and client
+    def receive_response(self):
+        self.status = Connection.STATUS_RECEIVING_HEADER
+
+        command = self.receive_single_header()
+        res = command.split(DataTransferProtocol.ARGS_SEPARATOR)
+
+        self.status = Connection.STATUS_IDLE
+
+        return res[0]
+        
     
     def sanitize(self, command):
         # TODO: Implement command and args sanitazing
         return command
-    
-    def send_data(self, data):
-        self.socket.send(data)
 
-    def send_status(self, operation_status):
+    def send_message(self, operation_status):
         self.status = Connection.STATUS_SENDING_HEADER 
 
         res = self.socket.send(operation_status().get_header())

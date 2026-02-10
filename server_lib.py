@@ -10,7 +10,8 @@ class FileStorageServer:
     MAX_CHUNK_SIZE = 1024  
     MAX_CONNECTION_BUFFER_Size = 100 * 1024 * 1024 
     
-    def __init__(self, listen_address = DEFAULT_LISTEN_ADDRESS, listen_port = DEFAULT_LISTEN_PORT):
+    def __init__(self, logger, listen_address = DEFAULT_LISTEN_ADDRESS, listen_port = DEFAULT_LISTEN_PORT):
+        self.logger = logger
         self.listen_address = listen_address
         self.listen_port = listen_port
         self.enabled_handlers = {}
@@ -47,7 +48,7 @@ class FileStorageServer:
         while process_connection_data:
 
             if connection_counter > FileStorageServer.MAX_REQUESTS_PER_CONNECTION:
-                connection.send_status(DataTransferProtocol.ForbiddenResponse)
+                connection.send_message(DataTransferProtocol.ForbiddenResponse)
                 process_connection_data = False
                 continue 
 
@@ -59,9 +60,9 @@ class FileStorageServer:
                     request = self.get_command_request(command_name)(command_args)      # Instantiate Request class
                     handler(request, connection)
                 else:
-                    connection.send_status(DataTransferProtocol.UnauthorizedResponse)
+                    connection.send_message(DataTransferProtocol.UnauthorizedResponse)
             else:
-                connection.send_status(DataTransferProtocol.ForbiddenResponse)
+                connection.send_message(DataTransferProtocol.ForbiddenResponse)
 
     def get_command_handler(self, command_name):
         return self.enabled_handlers.get(command_name)[0]

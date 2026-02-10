@@ -15,16 +15,15 @@ class UsersProvider:
             connection.authenticated = True
             connection.user_id = user_id
 
-            connection.send_status(DataTransferProtocol.SuccessResponse)
+            connection.send_message(DataTransferProtocol.SuccessResponse)
 
             return True, "Authentication successfull"
         
-    def rename_user(self, user_id, new_user_alias, connection):
-        res = self.db_provider.update_user_alias(user_id, new_user_alias)
+    def rename_user(self, user_id, new_user_name, connection):
+        res = self.db_provider.update_user_name(user_id, new_user_name)
 
         if res:
-
-            connection.send_status(DataTransferProtocol.SuccessResponse)
+            connection.send_message(DataTransferProtocol.SuccessResponse)
             return True, "User rename successfull"
         
         return False

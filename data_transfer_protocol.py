@@ -1,4 +1,5 @@
-import struct
+import datetime
+
 
 class DataTransferProtocol:
     # Limitations of protocol
@@ -17,56 +18,69 @@ class DataTransferProtocol:
 
     #Allowed commands
     AUTHENTICATE_COMMAND = 'AUTHENTICATE'
-    DOWNLOAD_COMMAND = 'DOWNLOAD'
-    REMOVE_COMMAND = 'REMOVE'
-    RENAME_COMMAND = 'RENAME'
+    USER_RENAME_COMMAND = 'USER_RENAME'
     LIST_COMMAND = 'LIST'
-    FILE_TRANSFER_COMMAND = 'FILE_TRANSFER'
+    FILE_REMOVE_COMMAND = 'FILE_REMOVE'
+    FILE_RENAME_COMMAND = 'FILE_RENAME'
+    FILE_UPLOAD_COMMAND = 'FILE_UPLOAD'
+    FILE_UPDATE_COMMAND = 'FILE_UPDATE'
 
     class BaseOperation:
         def get_header(self):
             header = ProtocolHelper.to_header_format((self.__dict__.values()))
-            return struct.pack(header)
+            return header.encode()
 
     # The following requests may be sent by client
 
     # AUTHENTICATE <username> <password> \n
     class AuthenticationRequest(BaseOperation):
         def __init__(self, args):
-            self.name = DataTransferProtocol.AUTHENTICATE_COMMAND
+            self.command = DataTransferProtocol.AUTHENTICATE_COMMAND
             self.login = args[0]
             self.password_hash = args[1]
             self.salt = args[2]
 
-    # DOWNLOAD <file_name> \n
-    class DownloadRequest(BaseOperation):
+    # USER_RENAME <new_user_name> \n
+    class UserRenameRequest(BaseOperation):
         def __init__(self, args):
-            self.name = DataTransferProtocol.DOWNLOAD_COMMAND
+            self.command = DataTransferProtocol.USER_RENAME_COMMAND
+            self.new_user_name = args[0]
+
+    # FILE_REMOVE <file_name> \n
+    class FileRemoveRequest(BaseOperation):
+        def __init__(self, args):
+            self.command = DataTransferProtocol.FILE_REMOVE_COMMAND
             self.file_name = args[0]
 
-    # REMOVE <file_name> \n
-    class RemoveRequest(BaseOperation):
+    # FILE_RENAME <file_name> <new_file_name> \n
+    class FileRenameRequest(BaseOperation):
         def __init__(self, args):
-            self.name = DataTransferProtocol.REMOVE_COMMAND
-            self.file_name = args[0]
-
-    # RENAME <file_name> <new_file_name> \n
-    class RenameRequest(BaseOperation):
-        def __init__(self, args):
-            self.name = DataTransferProtocol.RENAME_FILE_COMMAND
+            self.command = DataTransferProtocol.FILE_RENAME_COMMAND
             self.file_name = args[0]
             self.new_file_name = args[1]
-
-    # RENAME_USER <username> \n
-    class RenameUserRequest(BaseOperation):
-        def __init__(self, args):
-            self.name = DataTransferProtocol.RENAME_USER_COMMAND
-            self.new_name = args[0]
 
     # LIST \n
     class ListRequest(BaseOperation):
         def __init__(self):
-            self.name = DataTransferProtocol.LIST_COMMAND
+            self.command = DataTransferProtocol.LIST_COMMAND
+
+    # FILE_UPLOAD <file_name> <filesize> \n
+    # <binary_payload>
+    class FileUploadRequest(BaseOperation):
+        def __init__(self, args):
+            self.command = DataTransferProtocol.FILE_UPLOAD_COMMAND
+            self.file_name = args[0]
+            self.filesize = args[1]
+            self.file_modification_time = datetime.now()
+
+    # FILE_UPDATE <file_name> <filesize> \n
+    # <binary_payload>
+    class FileUpdateRequest(BaseOperation):
+        def __init__(self, args):
+            self.command = DataTransferProtocol.FILE_UPDATE_COMMAND
+            self.file_name = args[0]
+            self.filesize = args[1]
+            self.file_modification_time = datetime.now()
 
 
     # The following responses may be sent by server
@@ -106,18 +120,6 @@ class DataTransferProtocol:
     class FileMissingResponse(BaseOperation):
         def __init__ (self):
             self.code = 553
-
-
-    # The following one can be used either by client and server, in case of file upload and download respectively
-
-    # FILE_TRANSFER <file_name> <filesize> <modification_time> \n
-    # <binary_payload>
-    class FileTransferOperation(BaseOperation):
-        def __init__(self, args):
-            self.name = DataTransferProtocol.FILE_TRANSFER_COMMAND
-            self.file_name = args[0]
-            self.filesize = args[1]
-            self.file_modification_time = args[2]
 
 
 class ProtocolHelper:

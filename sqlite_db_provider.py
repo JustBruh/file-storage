@@ -72,9 +72,8 @@ class SQLiteDbProvider:
         """, (user_id, file_id, file_name, file_mtime))
         self.connection.commit()
 
-    def update_file_name(self, file_id, new_file_name):
-        date = datetime.now()
-        self.cursor.execute("UPDATE Files SET file_name = ?, file_mtime = ? WHERE id = ?", (new_file_name, date, file_id))
+    def update_file_name(self, file_id, new_file_name, file_mtime):
+        self.cursor.execute("UPDATE Files SET file_name = ?, file_mtime = ? WHERE id = ?", (new_file_name, file_mtime, file_id))
 
     def update_user_alias(self, user_id, new_user_alias):
         date = datetime.now()

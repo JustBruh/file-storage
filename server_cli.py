@@ -1,5 +1,6 @@
 import argparse
-import os
+import logging
+
 from server_lib import *
 from sqlite_db_provider import *
 from lfss_provider import *
@@ -21,14 +22,17 @@ if __name__ == "__main__":
     users_provider = UsersProvider(db_provider)
     storage_provider = LocalFileSystemStorageProvider(('./storage'), db_provider)
 
-    file_storage_server = FileStorageServer()
+    logger = logging.getLogger(__name__)
+
+    file_storage_server = FileStorageServer(logger)
 
     file_storage_server.register_handler(DataTransferProtocol.AUTHENTICATE_COMMAND, users_provider.authenticate, DataTransferProtocol.AuthenticationRequest)
+    file_storage_server.register_handler(DataTransferProtocol.USER_RENAME_COMMAND, users_provider.rename_user, DataTransferProtocol)
     file_storage_server.register_handler(DataTransferProtocol.LIST_COMMAND, storage_provider.list_files, DataTransferProtocol.ListRequest)
-    file_storage_server.register_handler(DataTransferProtocol.DOWNLOAD_COMMAND, storage_provider.save_file, DataTransferProtocol.DownloadRequest)
-    file_storage_server.register_handler(DataTransferProtocol.FILE_TRANSFER_COMMAND, storage_provider.send_file, DataTransferProtocol.FileTransferOperation)
-    file_storage_server.register_handler(DataTransferProtocol.REMOVE_COMMAND, storage_provider.remove_file, DataTransferProtocol.RemoveRequest)
-    file_storage_server.register_handler(DataTransferProtocol.RENAME_COMMAND, users_provider.rename_user, DataTransferProtocol.RenameRequest)
+    file_storage_server.register_handler(DataTransferProtocol.FILE_REMOVE_COMMAND, storage_provider.remove_file, DataTransferProtocol.FileRemoveRequest)
+    file_storage_server.register_handler(DataTransferProtocol.FILE_RENAME_COMMAND, storage_provider.rename_file, DataTransferProtocol.FileRenameRequest)
+    file_storage_server.register_handler(DataTransferProtocol.FILE_UPLOAD_COMMAND, storage_provider.save_file, DataTransferProtocol.FileUploadRequest)
+    file_storage_server.register_handler(DataTransferProtocol.FILE_UPDATE_COMMAND, storage_provider.overwrite_file, DataTransferProtocol.FileUpdateRequest)
 
     file_storage_server.start()
 

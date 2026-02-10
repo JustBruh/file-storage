@@ -8,10 +8,10 @@ if __name__ == "__main__":
     )
 
     parser.add_argument('-s', '--server')
-    parser.add_argument('-f', '--filename')
+    parser.add_argument('-f', '--file_name')
 
     args = parser.parse_args()
 
-    bytes_sent = FileStorageClient.upload_file(args.server, args.filename)
+    bytes_sent = FileStorageClient.upload_file(args.server, args.file_name)
 
     print(bytes_sent)

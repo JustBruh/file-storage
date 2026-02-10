@@ -1,77 +1,137 @@
 import socket
+import os
 import struct
 from data_transfer_protocol import *
+from connection import *
 
+class Cli
 
 class FileStorageClient:
     REMOTE_PORT = 40221
+    CHUNK_SIZE = 1024
 
-    def _authenticate_on_server(socket, username, password):
-        auth_request = DataTransferProtocol.AuthenticationRequest((username, password))
-        res = socket.send(auth_request.get_header())
+    def __init__(self, logger):
+        self.connection = None
+        self.logger = logger
 
-        if (struct.unpack(res) == 200):
-                print('Authentication successfull')
+    def connect(self, remote_address):
+        connection_socket, addr = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE)
+
+        if connection_socket:
+            self.logger.info("Connected successfully: ", addr)
         else:
-            print('Authentication failed')
+            self.logger.info("Connection failed: ", addr)
 
-    def upload_file(self, remote_address, file_name, username, password):
-        connection = self.create_socket_and_authenticate(remote_address, username, password)
+        connection_socket = self.connection.connect((remote_address, FileStorageClient.REMOTE_PORT))
 
-        with open('{connection.username}/{download_request.filename}', 'rb') as file:
-            file_transfer_operation = DataTransferProtocol.FileTransferOperation((file_name, file.size, file.modification_time))
+    def authenticate(self, login, password):
+        auth_request = DataTransferProtocol.AuthenticationRequest((login, password))
 
-            connection.send_data(file_transfer_operation.get_header())
+        self.connection.send_message(auth_request)
 
-            connection.send_file(file)
+        res, ... = self.connection.receive_response()
 
-            res = connection.receive_data_until_terminator()
+        if res == 200:
+            self.logger.info("Authentication successfull")
+        else:
+            self.logger.info("Authentication failed")
 
-            if (struct.unpack(res) == 200):
-                print('Upload successfull')
-            else:
-                print('Upload failed')
+    def rename_user(self, new_user_name):
+        rename_user_request = DataTransferProtocol.UserRenameRequest((new_user_name))
 
-    def download_file(self, remote_address, file_name, username, password):
-        connection = self.create_socket_and_authenticate(remote_address, username, password)
+        self.connection.send_message(rename_user_request)
 
-        with open('{connection.username}/{file_transfer_object.filename}', 'wb') as file:
-            download_request = DataTransferProtocol.DownloadRequest((file_name, ))
+        res, ... = self.connection.receive_response()
 
-            res = connection.send_data(download_request.get_header())
+        if res == 200:
+            self.logger.info("User rename successfull")
+        else:
+            self.logger.info("User rename failed")
 
-            res = connection.receive_data_until_terminator()
+    def remove_file(self, file_name):
+        remove_file_request = DataTransferProtocol.FileRemoveRequestRequest((file_name))
 
-            connection.receive_and_write_file(file, struct.unpack(res.split('\n')[0]), file_modification_time)
+        self.connection.send_message(remove_file_request)
 
-    def rename_user(self, remote_address, username, password, new_username):
-        connection = self.create_socket_and_authenticate(remote_address, username, password)
-        rename_request = DataTransferProtocol.RenameRequest(new_username)
+        res, ... = self.connection.receive_response()
 
-        connection.send_data(rename_request.get_header())
+        if res == 200:
+            self.logger.info("File removal successfull")
+        else:
+            self.logger.info("File removal failed")
 
-        res = connection.receive_data_until_terminator()
-
-        print(res)
-
-    def list_files(self, remote_address, username, password, new_username):
-        connection = self.create_socket_and_authenticate(remote_address, self.REMOTE_PORT, username, password)
+    def list_files(self):
         list_request = DataTransferProtocol.ListRequest()
 
-        connection.send_data(list_request.get_header())
+        self.connection.send_message(list_request)
 
-        res = connection.receive_data_until_terminator()
+        payload_size, ... = self.connection.receive_response()
 
-        res = connection.receive_data_with_exact_size(struct.unpack(res.split('\n')[0]))
+        buffer = bytearray()
 
-        print(res)
+        processing_func = lambda chunk: buffer.extend(chunk)
 
-    def create_socket_and_authenticate(self, remote_address, username, password):
-        new_socket = socket.create_connection((remote_address, self.REMOTE_PORT))
+        res = self.connection.receive_and_process_payload(processing_func)
 
-        connection = Connection(new_socket)
+        return res
 
-        auth_request = DataTransferProtocol.AuthenticationRequest((username, password))
-        connection.send_data(auth_request.get_header())
+    def rename_file(self, file_name, new_file_name):
+        rename_file_request = DataTransferProtocol.FileRemoveRequestRequest((file_name, new_file_name))
 
-        return connection
+        self.connection.send_message(rename_file_request)
+
+        res, ... = self.connection.receive_response()
+
+        if res == 200:
+            self.logger.info("File rename successfull")
+        else:
+            self.logger.info("File rename failed")
+
+    def upload_file(self, file_name):
+        file_size_bytes = os.path.getsize(file_name)
+
+        with open(file_name, 'rb') as file:
+            file_upload_request = DataTransferProtocol.FileUploadRequest((file_name, file_size_bytes))
+
+            self.connection.send_message(file_upload_request)
+
+            res = self.connection.receive_response()
+
+            if res == 200:
+                with open("file_name", "rb") as file:
+                    self.connection.socket.sendfile(file)
+
+                res = self.connection.receive_response()
+
+                if res == 200:
+                    self.logger.info("File uploaded")
+                else:
+                    self.logger.info("File upload failed")
+            else:
+                self.logger.info("Failed to start file upload")
+
+    def update_file(self, file_name):
+        file_size_bytes = os.path.getsize(file_name)
+
+
+        with open(file_name, 'rb') as file:
+            file_update_request = DataTransferProtocol.FileUpdateRequest((file_name, file_size_bytes))
+
+            self.connection.send_message(file_update_request)
+
+            res = self.connection.receive_response()
+
+            if res == 200:
+                with open("file_name", "rb") as file:
+                    self.connection.socket.sendfile(file)
+
+                res = self.connection.receive_response()
+
+                if res == 200:
+                    self.logger.info("File updated")
+                else:
+                    self.logger.info("File update failed")
+            else:
+                self.logger.info("Failed to start file update")
