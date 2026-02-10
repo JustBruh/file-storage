@@ -20,7 +20,7 @@ Project is supposed to work with Debian 13, support for other platforms does not
 
 Usage examples:
 
-ftp-cli upload --remote_address <remote_server_address> -f <local_file_path> --custom_filename <custom_filename_for_storage> 
+ftp-cli upload --remote_address <remote_server_address> -f <local_file_path> --custom_file_name <custom_file_name_for_storage> 
 
 ftp-cli download --remote_address <remote_server_address> -f <remote_file_name>
 

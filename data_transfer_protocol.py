@@ -6,7 +6,7 @@ class DataTransferProtocol:
     MAX_USERNAME_LENGTH = 128
     MAX_LOGIN_LENGTH = 128
     MAX_PASSWORD_HASH_LENGTH = 255
-    MAX_FILENAME_LENGTH = 255
+    MAX_FILE_NAME_LENGTH = 255
     MAX_PAYLOAD_SIZE = 100 * 1024 * 1024 # 100MB
 
     # Arguments of a command must be separated by whitespace
@@ -38,23 +38,23 @@ class DataTransferProtocol:
             self.password_hash = args[1]
             self.salt = args[2]
 
-    # DOWNLOAD <filename> \n
+    # DOWNLOAD <file_name> \n
     class DownloadRequest(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.DOWNLOAD_COMMAND
-            self.filename = args[0]
+            self.file_name = args[0]
 
-    # REMOVE <filename> \n
+    # REMOVE <file_name> \n
     class RemoveRequest(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.REMOVE_COMMAND
-            self.filename = args[0]
+            self.file_name = args[0]
 
-    # RENAME <filename> <new_file_name> \n
+    # RENAME <file_name> <new_file_name> \n
     class RenameRequest(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.RENAME_FILE_COMMAND
-            self.filename = args[0]
+            self.file_name = args[0]
             self.new_file_name = args[1]
 
     # RENAME_USER <username> \n
@@ -110,7 +110,7 @@ class DataTransferProtocol:
 
     # The following one can be used either by client and server, in case of file upload and download respectively
 
-    # FILE_TRANSFER <filename> <filesize> <modification_time> \n
+    # FILE_TRANSFER <file_name> <filesize> <modification_time> \n
     # <binary_payload>
     class FileTransferOperation(BaseOperation):
         def __init__(self, args):
