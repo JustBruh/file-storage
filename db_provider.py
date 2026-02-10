@@ -19,14 +19,17 @@ class PostreSQLDbProvider:
 
         return ''
     
-    def update_user_name(self, user_id, new_user_name):
-        date = datetime.now()
-        cursor.execute("UPDATE Table Users WHERE user.name = '{user_name}' WITH name = '{new_user_name}'")
-        cursor.execute("UPDATE Table users_history WITH old_name = '{user_name} new_name = '{new_user_name}' date_modified = '{date}'")
-        return cursor.fetchone()
-    
     def get_file_id(self, user_id, filename):
         return 
     
     def store_file_metadata(self, user_id, file_id, file_name, file_mtime):
         return
+    
+    def update_user_alias(self, user_id, new_user_alias):
+        date = datetime.now()
+        cursor.execute("UPDATE Table Users WHERE user.name = '{user_name}' WITH name = '{new_user_name}'")
+        cursor.execute("UPDATE Table users_history WITH old_name = '{user_name} new_name = '{new_user_name}' date_modified = '{date}'")
+        return cursor.fetchone()
+        
+    def get_user_data_by_login(self, login):
+

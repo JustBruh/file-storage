@@ -18,7 +18,6 @@ class Connection:
 
         self.authenticated = False
         self.user_id = None
-        self.login = None
 
         self.status = Connection.STATUS_IDLE
 
