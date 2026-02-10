@@ -1,12 +1,19 @@
 import struct
 
 class DataTransferProtocol:
+    # Limitations of protocol
+    MAX_HEADER_SIZE = 4096
+    MAX_USERNAME_LENGTH = 128
+    MAX_LOGIN_LENGTH = 128
+    MAX_PASSWORD_HASH_LENGTH = 255
+    MAX_FILENAME_LENGTH = 255
+    MAX_PAYLOAD_SIZE = 100 * 1024 * 1024 # 100MB
 
     # Arguments of a command must be separated by whitespace
-    ARGS_SEPARATOR = ' '
+    ARGS_SEPARATOR = b' '
     
-    # Commands must be separated by carriage return
-    LINE_TERMINATOR = '\n'
+    # Commands must be separated by line return symbol
+    LINE_TERMINATOR = b'\n'
 
     #Allowed commands
     AUTHENTICATE_COMMAND = 'AUTHENTICATE'
@@ -27,9 +34,9 @@ class DataTransferProtocol:
     class AuthenticationRequest(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.AUTHENTICATE_COMMAND
-            self.username = args[0]
-            self.password = args[1]
-
+            self.login = args[0]
+            self.password_hash = args[1]
+            self.salt = args[2]
 
     # DOWNLOAD <filename> \n
     class DownloadRequest(BaseOperation):
@@ -48,7 +55,7 @@ class DataTransferProtocol:
     class RenameRequest(BaseOperation):
         def __init__(self, args):
             self.name = DataTransferProtocol.RENAME_COMMAND
-            self.new_username = args[0]
+            self.new_name = args[0]
 
 
     # LIST \n
@@ -85,6 +92,21 @@ class DataTransferProtocol:
         def __init__ (self):
             self.code = 404
 
+    # 413 \n
+    class LengthLimitExceeded(BaseOperation):
+        def __init__ (self):
+            self.code = 413
+
+    # 550 \n
+    class FileExistsResponse(BaseOperation):
+        def __init__ (self):
+            self.code = 550
+
+    # 553 \n
+    class FileMissingResponse(BaseOperation):
+        def __init__ (self):
+            self.code = 553
+
 
     # The following one can be used either by client and server, in case of file upload and download respectively
 
@@ -96,7 +118,7 @@ class DataTransferProtocol:
             self.filename = args[0]
             self.filesize = args[1]
             self.file_modification_time = args[2]
-            
+
 
 class ProtocolHelper:
     def to_header_format(self, data):
@@ -106,95 +128,6 @@ class ProtocolHelper:
             res = ''
 
             for data_object in data_objects:
-                res += ' '.join(tuple(str(item) for item in data_object.values()))+DataTransferProtocol.LINE_TERMINATOR
+                res += ' '.join(tuple(str(item) for item in data_object.values())) + DataTransferProtocol.LINE_TERMINATOR
 
-            return res  
-    
-
-class Connection:
-    def __init__(self, socket):
-        self.buffer = bytearray()
-        self.chunk_size = 1024
-        
-        self.socket = socket
-
-        self.authenticated = False
-        self.username = None
-
-    def close(self):
-        self.socket.close()
-
-    def receive_data_until_terminator(self):
-        data = bytearray()
-
-        #TODO: Implement some limiter
-        while self.command_terminator not in data:
-            chunk = self.socket.recv(self.chunk_size)
-
-            if not chunk:
-                return "Connection closed"
-            
-            data += chunk
-
-        res, self.buffer = data.split('\n', 2)
-
-        return res
-    
-    def receive_data_with_exact_size(self, data_size):
-        data = bytearray()
-
-        while len(data) < data_size:
-            chunk = self.socket.recv(self.chunk_size)
-            
-            if not chunk:
-               return "Connection closed"
-
-            data += chunk 
-
-        res = data[0:data_size]
-
-        self.buffer += data[data_size:]
-
-        return res
-    
-    def receive_and_write_to_file(self, file, file_size):
-        data_received = 0
-
-        while data_received < file_size:
-            chunk = self.socket.recv(self.chunk_size)
-            
-            if not chunk:
-               return "Connection closed"
-
-            if data_received + len(chunk) > file_size:
-                data_left = file_size-data_received
-
-                last_chunk = chunk[0:data_left]
-                self.buffer = chunk[data_left:]
-
-                chunk = last_chunk
-
-            file.write(chunk)
-
-            data_received += len(chunk)
-
-        return True
-
-    def send_data(self, data):                                
-        return self.socket.send(data)
-    
-    def send_status(self, status):
-        self.send_data(status.get_header())
-    
-    def send_file(self, file):
-        self.socket.sendfile(file)
-
-    def receive_command(self):
-        command = self.receive_data_until_terminator()
-        sanitized_command = self.sanitize(command)
-        
-        return sanitized_command.split(" ")
-    
-    def _sanitize(self, command):
-        # TODO: Implement string sanitazing
-        return command
+            return res
