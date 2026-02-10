@@ -75,13 +75,13 @@ class SQLiteDbProvider:
     def update_file_name(self, file_id, new_file_name, file_mtime):
         self.cursor.execute("UPDATE Files SET file_name = ?, file_mtime = ? WHERE id = ?", (new_file_name, file_mtime, file_id))
 
-    def update_user_alias(self, user_id, new_user_alias):
+    def update_user_name(self, user_id, new_user_name):
         date = datetime.now()
-        self.cursor.execute("UPDATE Users SET name = ? WHERE id = ?", (new_user_alias, user_id))
+        self.cursor.execute("UPDATE Users SET name = ? WHERE id = ?", (new_user_name, user_id))
         self.cursor.execute("""
             INSERT INTO users_history (user_id, old_name, new_name, date_modified) 
             VALUES (?, ?, ?, ?)
-        """, (user_id, self.get_user_data(user_id)[1], new_user_alias, date))
+        """, (user_id, self.get_user_data(user_id)[1], new_user_name, date))
         self.connection.commit()
     
     def get_user_data(self, login):

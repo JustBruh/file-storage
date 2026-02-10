@@ -4,8 +4,6 @@ import struct
 from data_transfer_protocol import *
 from connection import *
 
-class Cli
-
 class FileStorageClient:
     REMOTE_PORT = 40221
     CHUNK_SIZE = 1024
