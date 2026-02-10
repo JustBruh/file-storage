@@ -27,7 +27,7 @@ class DataTransferProtocol:
 
     class BaseOperation:
         def get_header(self):
-            header = ProtocolHelper.to_header_format((self.__dict__.values()))
+            header = DataTransferProtocol.ARGS_SEPARATOR.decode().join(self.__dict__.values())+DataTransferProtocol.LINE_TERMINATOR.decode()
             return header.encode()
 
     # The following requests may be sent by client
@@ -37,8 +37,7 @@ class DataTransferProtocol:
         def __init__(self, args):
             self.command = DataTransferProtocol.AUTHENTICATE_COMMAND
             self.login = args[0]
-            self.password_hash = args[1]
-            self.salt = args[2]
+            self.password = args[1]
 
     # USER_RENAME <new_user_name> \n
     class UserRenameRequest(BaseOperation):
@@ -120,16 +119,3 @@ class DataTransferProtocol:
     class FileMissingResponse(BaseOperation):
         def __init__ (self):
             self.code = 553
-
-
-class ProtocolHelper:
-    def to_header_format(self, data):
-        return ' '.join(data)+DataTransferProtocol.LINE_TERMINATOR
-    
-    def to_text_payload_format(self, data_objects):
-            res = ''
-
-            for data_object in data_objects:
-                res += ' '.join(tuple(str(item) for item in data_object.values())) + DataTransferProtocol.LINE_TERMINATOR
-
-            return res

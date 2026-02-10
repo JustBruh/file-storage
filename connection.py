@@ -168,7 +168,7 @@ class Connection:
     def send_message(self, operation_status):
         self.status = Connection.STATUS_SENDING_HEADER 
 
-        res = self.socket.send(operation_status().get_header())
+        res = self.socket.send(operation_status.get_header())
 
         self.status = Connection.STATUS_IDLE
 

@@ -7,7 +7,7 @@ class SQLiteDbProvider:
         self.connection = sqlite3.connect(connection_string)
         self.cursor = self.connection.cursor()
 
-        if not os.path.exists(self.connection_string):
+        if not os.path.exists(connection_string):
             self.create_database()
 
     def create_database(db_name):

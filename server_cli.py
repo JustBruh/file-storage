@@ -34,8 +34,12 @@ if __name__ == "__main__":
     file_storage_server.register_handler(DataTransferProtocol.FILE_UPLOAD_COMMAND, storage_provider.save_file, DataTransferProtocol.FileUploadRequest)
     file_storage_server.register_handler(DataTransferProtocol.FILE_UPDATE_COMMAND, storage_provider.overwrite_file, DataTransferProtocol.FileUpdateRequest)
 
+    print("Starting the server")
+
     file_storage_server.start()
 
     file_storage_server.stop()
+
+    print("Stopping the server")
 
     db_provider.close()

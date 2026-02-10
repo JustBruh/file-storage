@@ -1,6 +1,5 @@
 import socket
 import os
-import struct
 from data_transfer_protocol import *
 from connection import *
 
@@ -13,23 +12,26 @@ class FileStorageClient:
         self.logger = logger
 
     def connect(self, remote_address):
-        connection_socket, addr = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE)
+        try:
+            connection_socket.connect((remote_address, FileStorageClient.REMOTE_PORT))
 
-        if connection_socket:
-            self.logger.info("Connected successfully: ", addr)
-        else:
-            self.logger.info("Connection failed: ", addr)
+            self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE)
 
-        connection_socket = self.connection.connect((remote_address, FileStorageClient.REMOTE_PORT))
+            if connection_socket:
+                self.logger.info("Connected successfully")
+        except ConnectionRefusedError as ex:
+                self.logger.info("Connection failed: ", ex)
+
+                return False
 
     def authenticate(self, login, password):
         auth_request = DataTransferProtocol.AuthenticationRequest((login, password))
 
         self.connection.send_message(auth_request)
 
-        res, ... = self.connection.receive_response()
+        res, _ = self.connection.receive_response()
 
         if res == 200:
             self.logger.info("Authentication successfull")
@@ -41,7 +43,7 @@ class FileStorageClient:
 
         self.connection.send_message(rename_user_request)
 
-        res, ... = self.connection.receive_response()
+        res, _ = self.connection.receive_response()
 
         if res == 200:
             self.logger.info("User rename successfull")
@@ -53,7 +55,7 @@ class FileStorageClient:
 
         self.connection.send_message(remove_file_request)
 
-        res, ... = self.connection.receive_response()
+        res, _ = self.connection.receive_response()
 
         if res == 200:
             self.logger.info("File removal successfull")
@@ -65,13 +67,13 @@ class FileStorageClient:
 
         self.connection.send_message(list_request)
 
-        payload_size, ... = self.connection.receive_response()
+        payload_size, _ = self.connection.receive_response()
 
         buffer = bytearray()
 
         processing_func = lambda chunk: buffer.extend(chunk)
 
-        res = self.connection.receive_and_process_payload(processing_func)
+        res = self.connection.receive_and_process_payload(processing_func, payload_size)
 
         return res
 
@@ -80,7 +82,7 @@ class FileStorageClient:
 
         self.connection.send_message(rename_file_request)
 
-        res, ... = self.connection.receive_response()
+        res, _ = self.connection.receive_response()
 
         if res == 200:
             self.logger.info("File rename successfull")

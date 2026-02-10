@@ -28,9 +28,11 @@ class FileStorageServer:
         self.server_enabled = True
 
         while self.server_enabled:
-
-            connection_socket = server_socket.accept()
-            connection_socket.timeout()
+            try:
+                connection_socket = server_socket.accept()
+                connection_socket.timeout()
+            except:
+                continue
 
             #TODO: Somehow start processing new connection in background, without awaiting for result, check up poll, epoll, select for async sockets
             self.process_socket_data(connection_socket)
