@@ -9,9 +9,8 @@ class Connection:
     STATUS_SENDING_HEADER = 4
     STATUS_SENDING_PAYLOAD = 5
 
-    def __init__(self, socket, chunk_size):
+    def __init__(self, socket, chunk_size, logger):
         self.header_buffer_in = bytearray()
-        self.buffer_out = bytearray()
         
         self.socket = socket
         self.chunk_size = chunk_size
@@ -19,20 +18,16 @@ class Connection:
         self.authenticated = False
         self.user_id = None
 
-        self.status = Connection.STATUS_IDLE
-
-        self.last_update_timestamp = None
+        self.logger = logger
 
     def close(self):
         self.socket.close()
         
-    def update_header_buffer_in(self, update):
+    def try_update_header_buffer_in(self, update):
         if len(self.header_buffer_in) + len(update) > DataTransferProtocol.MAX_HEADER_SIZE:
-            return False, "Maximum header length exceeded"
+            raise BufferError("Maximum header length exceeded")
         
         self.header_buffer_in.extend(update)
-
-        return True, None
     
     def try_retreive_single_header_from_buffer_in(self):
         if DataTransferProtocol.LINE_TERMINATOR in self.header_buffer_in:
@@ -47,129 +42,94 @@ class Connection:
             return first_found_header
 
         else:
-            return False
+            return None
 
     def receive_single_header(self):
-        self.status = Connection.STATUS_RECEIVING_HEADER
-
         header = bytearray()
 
-        continue_receiving = True
-
-        while continue_receiving:
+        while True:
 
             # If command already stored in buffer
             header = self.try_retreive_single_header_from_buffer_in()
 
             if header:
-               continue_receiving = False
-               continue
+               return header
 
             chunk = self.socket.recv(self.chunk_size)
 
             if not chunk:
-                return False, "Connection closed"
-            
-            update_successfull, message = self.update_header_buffer_in(chunk)
+                raise Exception("No data from socket received")
 
-            if not update_successfull:
-                return False, message
-            
-        self.status = Connection.STATUS_IDLE
-
-        return header
+            # Exception would be raised, if buffer is filled
+            self.try_update_header_buffer_in(chunk)
         
     def receive_and_process_payload(self, payload_processor_func, payload_size):
-        self.status = Connection.STATUS_RECEIVING_PAYLOAD
+        processed_size = 0
 
-        written_size = 0
-
-        continue_receiving = True
-
-        res = False
-        res_message = ""
-
-        while continue_receiving:
+        while True:
 
             chunk = self.socket.recv(self.chunk_size)
 
             # No expected data received from socket
             if not chunk:
-                continue_receiving = False
-                res_message = "Connection closed"
+                raise Exception("No data received from socket")
 
-                continue
+            # How much of the payload is left to process with the latest chunk
+            exceed_limit_by = processed_size + len(chunk) - payload_size
 
-            exceed_limit_by = written_size + len(chunk) - payload_size
-
-            # Payload received, and subsequent command/commands are received, which would be saved to buffer
+            # Payload received, and subsequent header data was received, which would be saved to buffer
             if exceed_limit_by > 0:
-                payload_processor_func((chunk[:exceed_limit_by]))
+
+                #Process only the payload part
+                payload_part = chunk[:exceed_limit_by]
+                processed_size += len(payload_part)
+
+                payload_processor_func(payload_part)
 
                 #TODO: Check if there are cases, when buffer would be filled with trash, and no new command could be processed, due to buffer overflow
-                update_successfull, message = self.update_header_buffer_in(chunk[exceed_limit_by:])
+                
+                # Buffer could already contain data, and new header could exceed the buffer's limit
+                try:
+                    self.try_update_header_buffer_in(chunk[exceed_limit_by:])
+                except BufferError:
+                    self.logger("BufferError happened, payload was received first, and the following header was discarded, due to buffer overflow")
+                    return True
 
-                if update_successfull:
-                    res_message =  "Payload stored, and following command was stored in buffer"
-                else:
-                    res_message = "Payload stored, but following command was not stored in buffer, due to: " + message
-
-                continue_receiving = False
-
-                res = True
-
-                continue
-
-            # Common case, process the whole chunk
-            payload_processor_func(chunk)
-            
-            # Whole payload received, no subsequent data received
+            # The last payload part received, no following header data received
             if exceed_limit_by == 0:
-                payload_processor_func(chunk[:exceed_limit_by])
 
-                continue_receiving = False
+                #Process the whole chunk, because it's all payload data
+                payload_part = chunk
+                processed_size += len(payload_part)
 
-                res = True
-                res_message = "Payload stored successfully"
+                payload_processor_func(payload_part)
+                return True
 
-                continue
+            # Common case, chunk contains only the payload data
+            payload_part = chunk
+            processed_size += len(payload_part)
 
-        self.status = Connection.STATUS_IDLE
+            payload_processor_func(payload_part)
 
-        return res, res_message
-    
     def receive_command(self):
-        self.status = Connection.STATUS_RECEIVING_HEADER
-
         command = self.receive_single_header()
-        sanitized_command = self.sanitize(command.decode())
-        res = sanitized_command.split(DataTransferProtocol.ARGS_SEPARATOR)
-    
-        self.status = Connection.STATUS_IDLE
 
-        return res[:-1]
-    
+        sanitized_command = self.sanitize(command.decode())
+        command_with_args_tuple = sanitized_command.split(DataTransferProtocol.ARGS_SEPARATOR.decode())
+
+        return command_with_args_tuple
+
     # For Handling single-value responses either from server and client
     def receive_response(self):
-        self.status = Connection.STATUS_RECEIVING_HEADER
-
         command = self.receive_single_header()
-        res = command.split(DataTransferProtocol.ARGS_SEPARATOR)
 
-        self.status = Connection.STATUS_IDLE
+        command_with_args_tuple = command.split(DataTransferProtocol.ARGS_SEPARATOR)
 
-        return res[0]
-        
-    
+        return command_with_args_tuple[0]
+ 
     def sanitize(self, command):
         # TODO: Implement command and args sanitazing
         return command
 
-    def send_message(self, operation_status):
-        self.status = Connection.STATUS_SENDING_HEADER 
-
-        res = self.socket.send(operation_status.get_header())
-
-        self.status = Connection.STATUS_IDLE
-
-        return res
+    def send_message(self, message):
+        return self.socket.send(message.get_header())

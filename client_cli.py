@@ -21,9 +21,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    logging.basicConfig(filename='client-cli.log', level=logging.DEBUG)
     logger = logging.getLogger(__name__)
-
-    logger.addHandler(lambda data: print(data))
 
     client = FileStorageClient(logger)
 

@@ -19,29 +19,38 @@ class FileStorageServer:
     def start(self):
         socket.setdefaulttimeout(FileStorageServer.SOCKET_TIMEOUT_SECONDS)
 
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        server_socket.bind((self.listen_address, self.listen_port))
+        self.server_socket.bind((self.listen_address, self.listen_port))
 
-        server_socket.listen()
+        self.server_socket.listen()
 
         self.server_enabled = True
 
         while self.server_enabled:
             try:
-                connection_socket = server_socket.accept()
-                connection_socket.timeout()
-            except:
+                self.logger.debug("Waiting for new connection")
+
+                connection_socket, addr = self.server_socket.accept()
+
+                self.logger.debug("Incoming connection from: ", addr)
+
+                #TODO: Somehow start processing new connection in background, without awaiting for result, check up poll, epoll, select for async sockets
+                self.process_socket_data(connection_socket)
+                
+            except Exception as ex:
+                self.logger.error("Exception received within server main loop: ", ex)
                 continue
 
-            #TODO: Somehow start processing new connection in background, without awaiting for result, check up poll, epoll, select for async sockets
-            self.process_socket_data(connection_socket)
+            finally:
+                self.logger.debug("Finished processing connection")
 
     def stop(self):
         self.server_enabled = False
+        self.server_socket.close()
 
     def process_socket_data(self, connection_socket):
-        connection = Connection(connection_socket, FileStorageServer.MAX_CHUNK_SIZE)
+        connection = Connection(connection_socket, FileStorageServer.MAX_CHUNK_SIZE, self.logger)
 
         process_connection_data = True
 
@@ -55,7 +64,7 @@ class FileStorageServer:
                 continue 
 
             command_name, *command_args = connection.receive_command()
-
+        
             if command_name in self.enabled_handlers:
                 if connection.authenticated or command_name == DataTransferProtocol.AUTHENTICATE_COMMAND:
                     handler = self.get_command_handler(command_name)

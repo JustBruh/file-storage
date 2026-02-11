@@ -22,6 +22,7 @@ if __name__ == "__main__":
     users_provider = UsersProvider(db_provider)
     storage_provider = LocalFileSystemStorageProvider(('./storage'), db_provider)
 
+    logging.basicConfig(filename='server-cli.log', level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
     file_storage_server = FileStorageServer(logger)
@@ -36,10 +37,12 @@ if __name__ == "__main__":
 
     print("Starting the server")
 
-    file_storage_server.start()
+    try:
+        file_storage_server.start()
 
-    file_storage_server.stop()
+    except Exception as ex:
+        print("Some exception happened when server was running: ", ex)
 
-    print("Stopping the server")
-
-    db_provider.close()
+    finally:
+        file_storage_server.stop()
+        print("Stopping the server")
