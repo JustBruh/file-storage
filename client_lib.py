@@ -17,7 +17,7 @@ class FileStorageClient:
         try:
             connection_socket.connect((remote_address, FileStorageClient.REMOTE_PORT))
 
-            self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE)
+            self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE, self.logger)
 
             if connection_socket:
                 self.logger.info("Connected successfully")
