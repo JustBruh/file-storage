@@ -1,4 +1,4 @@
-import datetime
+from datetime import *
 
 
 class DataTransferProtocol:
@@ -69,8 +69,8 @@ class DataTransferProtocol:
         def __init__(self, args):
             self.command = DataTransferProtocol.FILE_UPLOAD_COMMAND
             self.file_name = args[0]
-            self.filesize = args[1]
-            self.file_modification_time = datetime.now()
+            self.filesize = str(args[1])
+            self.file_modification_time = str(datetime.now())
 
     # FILE_UPDATE <file_name> <filesize> \n
     # <binary_payload>
@@ -78,8 +78,8 @@ class DataTransferProtocol:
         def __init__(self, args):
             self.command = DataTransferProtocol.FILE_UPDATE_COMMAND
             self.file_name = args[0]
-            self.filesize = args[1]
-            self.file_modification_time = datetime.now()
+            self.filesize = str(args[1])
+            self.file_modification_time = str(datetime.now())
 
 
     # The following responses may be sent by server
@@ -88,44 +88,44 @@ class DataTransferProtocol:
     # <text_payload>
     class ListResponse(BaseOperation):
         def __init__(self, payload_length):
-            self.payload_length = payload_length
+            self.payload_length = str(payload_length)
 
     # 200 \n
     class SuccessResponse(BaseOperation):
         def __init__ (self):
-            self.code = 20
+            self.code = '200'
 
     # 403 \n
     class ForbiddenResponse(BaseOperation):
         def __init__ (self):
-            self.code = 403
+            self.code = '403'
 
     # 413 \n
     class LengthLimitExceeded(BaseOperation):
         def __init__ (self):
-            self.code = 413
+            self.code = '413'
 
     # 430 \n
     class InvalidCredentialsResponse(BaseOperation):
         def __init__ (self):
-            self.code = 430
+            self.code = '430'
 
     # 451 \n
     class ActionNotTakenResponse(BaseOperation):
         def __init__ (self):
-            self.code = 451
+            self.code = '451'
 
     # 530 \n
     class UnauthorizedResponse(BaseOperation):
         def __init__ (self):
-            self.code = 530
+            self.code = '530'
 
     # 550 \n
     class FileExistsResponse(BaseOperation):
         def __init__ (self):
-            self.code = 550
+            self.code = '550'
 
     # 553 \n
     class FileMissingResponse(BaseOperation):
         def __init__ (self):
-            self.code = 553
+            self.code = '553'

@@ -37,7 +37,8 @@ class Connection:
             first_found_header = self.header_buffer_in[0:terminator_index]
 
             #TODO: Get rid of excessive copying into buffer
-            self.header_buffer_in = self.header_buffer_in[terminator_index:]
+            # Extract the header with terminator from buffer_in
+            self.header_buffer_in = self.header_buffer_in[terminator_index + len(DataTransferProtocol.LINE_TERMINATOR):]
         
             return first_found_header
 

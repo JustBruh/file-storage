@@ -38,7 +38,10 @@ if __name__ == "__main__":
 
         res = client.connect(args.server)
 
-        client.authenticate(login, password)
+        res = client.authenticate(login, password)
+
+        if not res:
+            print("Failed to authenticate as: ", login)
 
         command = args.command
 
@@ -63,4 +66,4 @@ if __name__ == "__main__":
                 client.update_file(args.file_name)
 
     except Exception as ex:
-        print("Some exception happened, exiting cli...")
+        print("Some exception happened: ", ex)

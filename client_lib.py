@@ -34,12 +34,15 @@ class FileStorageClient:
 
         self.connection.send_message(auth_request)
 
-        res, _ = self.connection.receive_response()
+        code = self.connection.receive_response()
 
-        if res == 200:
+        #TODO: Implement mathching against DataTransferProtocol.Response.name, without instance of class
+        if code == b'200':
             self.logger.info("Authentication successfull")
+            return True
         else:
             self.logger.info("Authentication failed")
+            return False
 
     def rename_user(self, new_user_name):
         rename_user_request = DataTransferProtocol.UserRenameRequest((new_user_name))
@@ -93,7 +96,13 @@ class FileStorageClient:
             self.logger.info("File rename failed")
 
     def upload_file(self, file_name):
+        if not os.path.exists(file_name):
+            raise FileNotFoundError("File was not found: ", file_name)
+        
         file_size_bytes = os.path.getsize(file_name)
+
+        if file_size_bytes == 0:
+            raise FileNotFoundError("File was found but is empty: ", file_name)
 
         with open(file_name, 'rb') as file:
             file_upload_request = DataTransferProtocol.FileUploadRequest((file_name, file_size_bytes))

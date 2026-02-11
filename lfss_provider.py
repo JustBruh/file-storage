@@ -15,8 +15,8 @@ class LocalFileSystemStorageProvider:
             return
         
         # Path for user's files is following: <user_id>/<file_id>
-        file_id = uuid.uuid4()
-        file_path = self.get_file_path(connection.user_id, file_id)
+        file_id = str(uuid.uuid4())
+        file_path = os.path.join(self.storage_path, connection.user_id, file_id)
 
         # Make sure that user's storage dir exists
         os.makedirs(self.storage_path+connection.user_id, exist_ok=True)
@@ -37,11 +37,9 @@ class LocalFileSystemStorageProvider:
 
         return
     
-    def overwrite_file(self, fto, connection):
+    def overwrite_file(self, file_update_request, connection):
 
-        # Path for user's files is the following: <user_id>/<file_id>
-        file_id = self.db_provider.get_file_id(connection.user_id, fto.file_name)
-        file_path = os.path.join(self.storage_path, connection.user_id, file_id)
+        file_path = self.get_file_path(connection.user_id, file_update_request.file_name)
         
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
@@ -59,9 +57,13 @@ class LocalFileSystemStorageProvider:
 
             payload_processor = lambda chunk: file.write(chunk)
 
-            connection.receive_and_process_payload(payload_processor, fto.file_size)
+            connection.receive_and_process_payload(payload_processor, file_update_request.file_size)
 
-        self.db_provider.store_file_metadata(connection.user_id, fto.file_name, fto.file_size, fto.modification_time)
+        self.db_provider.store_file_metadata(
+            connection.user_id, 
+            file_update_request.file_name, 
+            file_update_request.file_size, 
+            file_update_request.modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
 
@@ -69,7 +71,6 @@ class LocalFileSystemStorageProvider:
     
     def rename_file(self, rename_request, connection):
 
-        # Path for user's files is the following: <user_id>/<file_id>
         file_path = self.get_file_path(connection.user_id, rename_request.file_name)
         
         if not os.path.exists(file_path):
@@ -83,7 +84,6 @@ class LocalFileSystemStorageProvider:
 
     def remove_file(self, remove_request, connection):
 
-        # Path for user's files is the following: <user_id>/<file_id>
         file_path = self.get_file_path(connection.user_id, remove_request.file_name)
         
         if not os.path.exists(file_path):
@@ -100,3 +100,8 @@ class LocalFileSystemStorageProvider:
         list_response = DataTransferProtocol.ListResponse(len(list_response_payload))
         connection.send_message(list_response)
         connection.send_payload(list_response_payload)
+
+    def get_file_path(self, user_id, file_name):
+        file_id = self.db_provider.get_file_id(user_id, file_name)
+        # Path for user's files is the following: <user_id>/<file_id>
+        return os.path.join(self.storage_path, user_id, file_id)
