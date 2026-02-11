@@ -66,6 +66,7 @@ class Connection:
         
     def receive_and_process_payload(self, payload_processor_func, payload_size):
         processed_size = 0
+        payload_size = int(payload_size)
 
         while True:
 

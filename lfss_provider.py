@@ -8,18 +8,19 @@ class LocalFileSystemStorageProvider:
         self.storage_path = storage_options
         self.db_provider = db_provider
 
-    def save_file(self, fto, connection):
+    def save_file(self, file_upload_request, connection):
 
-        if self.db_provider.get_file_id(connection.user_id, fto.file_name):
+        if self.db_provider.get_file_id(connection.user_id, file_upload_request.file_name):
             connection.send_code(DataTransferProtocol.FileExistsResponse)
             return
         
         # Path for user's files is following: <user_id>/<file_id>
         file_id = str(uuid.uuid4())
+        file_dir = os.path.join(self.storage_path, connection.user_id)
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
 
         # Make sure that user's storage dir exists
-        os.makedirs(self.storage_path+connection.user_id, exist_ok=True)
+        os.makedirs(file_dir, exist_ok=True)
 
         #TODO: Could .part postfix be useful for preventing concurrent reads?
         with open(file_path, "wb") as file:
@@ -29,9 +30,13 @@ class LocalFileSystemStorageProvider:
 
             payload_processor = lambda chunk: file.write(chunk)
 
-            connection.receive_and_process_payload(payload_processor, fto.file_size)
+            connection.receive_and_process_payload(payload_processor, file_upload_request.file_size)
 
-        self.db_provider.store_file_metadata(connection.user_id, fto.file_name, fto.file_size, fto.modification_time)
+        self.db_provider.store_file_metadata(
+            connection.user_id, 
+            file_id, 
+            file_upload_request.file_name, 
+            file_upload_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
 
@@ -39,7 +44,8 @@ class LocalFileSystemStorageProvider:
     
     def overwrite_file(self, file_update_request, connection):
 
-        file_path = self.get_file_path(connection.user_id, file_update_request.file_name)
+        file_id = self.db_provider.get_file_id(connection.user_id, file_update_request.file_name)
+        file_path = os.path.join(self.storage_path, connection.user_id, file_id)
         
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
@@ -61,9 +67,9 @@ class LocalFileSystemStorageProvider:
 
         self.db_provider.store_file_metadata(
             connection.user_id, 
-            file_update_request.file_name, 
+            file_id, 
             file_update_request.file_size, 
-            file_update_request.modification_time)
+            file_update_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
 

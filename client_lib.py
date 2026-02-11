@@ -49,9 +49,9 @@ class FileStorageClient:
 
         self.connection.send_message(rename_user_request)
 
-        res, _ = self.connection.receive_response()
+        code = self.connection.receive_response()
 
-        if res == 200:
+        if code == b'200':
             self.logger.info("User rename successfull")
         else:
             self.logger.info("User rename failed")
@@ -61,9 +61,9 @@ class FileStorageClient:
 
         self.connection.send_message(remove_file_request)
 
-        res, _ = self.connection.receive_response()
+        code = self.connection.receive_response()
 
-        if res == 200:
+        if code == b'200':
             self.logger.info("File removal successfull")
         else:
             self.logger.info("File removal failed")
@@ -88,9 +88,9 @@ class FileStorageClient:
 
         self.connection.send_message(rename_file_request)
 
-        res, _ = self.connection.receive_response()
+        code = self.connection.receive_response()
 
-        if res == 200:
+        if code == b'200':
             self.logger.info("File rename successfull")
         else:
             self.logger.info("File rename failed")
@@ -109,20 +109,20 @@ class FileStorageClient:
 
             self.connection.send_message(file_upload_request)
 
-            res = self.connection.receive_response()
+            code = self.connection.receive_response()
 
-            if res == 200:
-                with open("file_name", "rb") as file:
+            if code == b'200':
+                with open(file_name, "rb") as file:
                     self.connection.socket.sendfile(file)
 
-                res = self.connection.receive_response()
+                code = self.connection.receive_response()
 
-                if res == 200:
+                if code == b'200':
                     self.logger.info("File uploaded")
                 else:
                     self.logger.info("File upload failed")
             else:
-                self.logger.info("Failed to start file upload")
+                self.logger.info("Failed to start file upload, code: ", code)
 
     def update_file(self, file_name):
         file_size_bytes = os.path.getsize(file_name)
@@ -133,15 +133,15 @@ class FileStorageClient:
 
             self.connection.send_message(file_update_request)
 
-            res = self.connection.receive_response()
+            code = self.connection.receive_response()
 
-            if res == 200:
+            if code == b'200':
                 with open("file_name", "rb") as file:
                     self.connection.socket.sendfile(file)
 
-                res = self.connection.receive_response()
+                code = self.connection.receive_response()
 
-                if res == 200:
+                if code == b'200':
                     self.logger.info("File updated")
                 else:
                     self.logger.info("File update failed")

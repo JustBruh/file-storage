@@ -69,7 +69,7 @@ class DataTransferProtocol:
         def __init__(self, args):
             self.command = DataTransferProtocol.FILE_UPLOAD_COMMAND
             self.file_name = args[0]
-            self.filesize = str(args[1])
+            self.file_size = str(args[1])
             self.file_modification_time = str(datetime.now())
 
     # FILE_UPDATE <file_name> <filesize> \n
@@ -78,7 +78,7 @@ class DataTransferProtocol:
         def __init__(self, args):
             self.command = DataTransferProtocol.FILE_UPDATE_COMMAND
             self.file_name = args[0]
-            self.filesize = str(args[1])
+            self.file_size = str(args[1])
             self.file_modification_time = str(datetime.now())
 
 
