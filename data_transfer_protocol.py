@@ -105,10 +105,20 @@ class DataTransferProtocol:
         def __init__ (self):
             self.code = 413
 
+    # 430 \n
+    class InvalidCredentialsResponse(BaseOperation):
+        def __init__ (self):
+            self.code = 430
+
+    # 451 \n
+    class ActionNotTakenResponse(BaseOperation):
+        def __init__ (self):
+            self.code = 451
+
     # 530 \n
     class UnauthorizedResponse(BaseOperation):
         def __init__ (self):
-            self.code = 401
+            self.code = 530
 
     # 550 \n
     class FileExistsResponse(BaseOperation):

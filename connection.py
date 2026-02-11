@@ -133,3 +133,11 @@ class Connection:
 
     def send_message(self, message):
         return self.socket.send(message.get_header())
+    
+    def send_code(self, response_message):
+        return self.socket.send(response_message().get_header())
+    
+    def send_payload(self, payload):
+        processed_size = 0
+        while processed_size < len(payload):
+            processed_size += self.socket.send(payload[processed_size-1:])

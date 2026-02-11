@@ -59,7 +59,7 @@ class FileStorageServer:
         while process_connection_data:
 
             if connection_counter > FileStorageServer.MAX_REQUESTS_PER_CONNECTION:
-                connection.send_message(DataTransferProtocol.ForbiddenResponse)
+                connection.send_code(DataTransferProtocol.ForbiddenResponse)
                 process_connection_data = False
                 continue 
 
@@ -71,9 +71,9 @@ class FileStorageServer:
                     request = self.get_command_request(command_name)(command_args)      # Instantiate Request class
                     handler(request, connection)
                 else:
-                    connection.send_message(DataTransferProtocol.UnauthorizedResponse)
+                    connection.send_code(DataTransferProtocol.UnauthorizedResponse)
             else:
-                connection.send_message(DataTransferProtocol.ForbiddenResponse)
+                connection.send_code(DataTransferProtocol.ForbiddenResponse)
 
     def get_command_handler(self, command_name):
         return self.enabled_handlers.get(command_name)[0]

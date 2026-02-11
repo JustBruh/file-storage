@@ -48,7 +48,7 @@ class SQLiteDbProvider:
         connection.commit()
 
     def get_user_data(self, login):
-        self.cursor.execute("SELECT id, username, password FROM Users WHERE login = ?", (login,))
+        self.cursor.execute("SELECT id, name, password FROM Users WHERE login = ?", (login,))
         return self.cursor.fetchone()
 
     def get_file_id(self, user_id, file_name):
@@ -74,10 +74,6 @@ class SQLiteDbProvider:
             VALUES (?, ?, ?, ?)
         """, (user_id, self.get_user_data(user_id)[1], new_user_name, date,))
         self.connection.commit()
-    
-    def get_user_data(self, login):
-        self.cursor.execute("SELECT id, password FROM Users WHERE login = ?", (login,))
-        return self.cursor.fetchone()
 
     def list_user_files(self, user_id):
         self.cursor.execute("SELECT * FROM Files WHERE user_id = ?", (user_id,))

@@ -5,6 +5,7 @@ from connection import *
 
 class FileStorageClient:
     REMOTE_PORT = 40221
+    SOCKET_TIMEOUT_SECONDS = 30
     CHUNK_SIZE = 1024
 
     def __init__(self, logger):
@@ -12,6 +13,8 @@ class FileStorageClient:
         self.logger = logger
 
     def connect(self, remote_address):
+        socket.setdefaulttimeout(FileStorageClient.SOCKET_TIMEOUT_SECONDS)
+
         connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         try:

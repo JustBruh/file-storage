@@ -11,7 +11,7 @@ class LocalFileSystemStorageProvider:
     def save_file(self, fto, connection):
 
         if self.db_provider.get_file_id(connection.user_id, fto.file_name):
-            connection.send_message(DataTransferProtocol.FileExistsResponse)
+            connection.send_code(DataTransferProtocol.FileExistsResponse)
             return
         
         # Path for user's files is following: <user_id>/<file_id>
@@ -25,7 +25,7 @@ class LocalFileSystemStorageProvider:
         with open(file_path, "wb") as file:
 
             # Notify client, that server is ready for data transfer
-            connection.send_message(DataTransferProtocol.SuccessResponse)
+            connection.send_code(DataTransferProtocol.SuccessResponse)
 
             payload_processor = lambda chunk: file.write(chunk)
 
@@ -33,7 +33,7 @@ class LocalFileSystemStorageProvider:
 
         self.db_provider.store_file_metadata(connection.user_id, fto.file_name, fto.file_size, fto.modification_time)
 
-        connection.send_message(DataTransferProtocol.SuccessResponse)
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         return
     
@@ -44,18 +44,18 @@ class LocalFileSystemStorageProvider:
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
         
         if not os.path.exists(file_path):
-            connection.send_message(DataTransferProtocol.FileMissingResponse)
+            connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
         
         else:
-            connection.send_message(DataTransferProtocol.SuccessResponse)
+            connection.send_code(DataTransferProtocol.SuccessResponse)
 
         # Open and overwrite the file
         #TODO: Could .part postfix be useful for preventing concurrent reads?
         with open(file_path, "w+b") as file:
 
             # Notify client, that server is ready for data transfer
-            connection.send_message(DataTransferProtocol.SuccessResponse)
+            connection.send_code(DataTransferProtocol.SuccessResponse)
 
             payload_processor = lambda chunk: file.write(chunk)
 
@@ -63,7 +63,7 @@ class LocalFileSystemStorageProvider:
 
         self.db_provider.store_file_metadata(connection.user_id, fto.file_name, fto.file_size, fto.modification_time)
 
-        connection.send_message(DataTransferProtocol.SuccessResponse)
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         return
     
@@ -73,11 +73,11 @@ class LocalFileSystemStorageProvider:
         file_path = self.get_file_path(connection.user_id, rename_request.file_name)
         
         if not os.path.exists(file_path):
-            connection.send_message(DataTransferProtocol.FileMissingResponse)
+            connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
 
         os.rename(file_path, rename_request.new_file_name)
-        connection.send_message(DataTransferProtocol.SuccessResponse)
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         return
 
@@ -87,14 +87,16 @@ class LocalFileSystemStorageProvider:
         file_path = self.get_file_path(connection.user_id, remove_request.file_name)
         
         if not os.path.exists(file_path):
-            connection.send_message(DataTransferProtocol.FileMissingResponse)
+            connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
 
         os.remove(file_path)
-        connection.send_message(DataTransferProtocol.SuccessResponse)
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         return
 
     def list_files(self, connection):
-        self.db_provider.list_user_files(connection.user_id)
-        connection.send_message
+        list_response_payload = self.db_provider.list_user_files(connection.user_id)
+        list_response = DataTransferProtocol.ListResponse(len(list_response_payload))
+        connection.send_message(list_response)
+        connection.send_payload(list_response_payload)
