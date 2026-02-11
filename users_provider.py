@@ -20,7 +20,7 @@ class UsersProvider:
         
         else:
             connection.authenticated = True
-            connection.user_id = user_id
+            connection.user_id = str(user_id)
 
             connection.send_code(DataTransferProtocol.SuccessResponse)
             return True
