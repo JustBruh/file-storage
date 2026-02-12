@@ -57,8 +57,14 @@ class LocalFileSystemStorageProvider:
     def overwrite_file(self, file_update_request, connection):
 
         file_id = self.db_provider.get_file_id(connection.user_id, file_update_request.file_name)
+        
+        if not file_id:
+            connection.send_code(DataTransferProtocol.FileMissingResponse)
+            return
+        
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
         
+        #TODO: Only possible when someone deleted the file from storage, meanwhile DB store it's metadata still
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return

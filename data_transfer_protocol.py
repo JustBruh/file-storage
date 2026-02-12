@@ -32,8 +32,14 @@ class DataTransferProtocol:
 
     class BaseOperation:
         def get_header(self):
-            header = DataTransferProtocol.ARGS_SEPARATOR.decode().join(self.__dict__.values())+DataTransferProtocol.LINE_TERMINATOR.decode()
-            return header.encode()
+            header = bytearray()
+
+            for value in self.__dict__.values():
+                header.extend(f"'{value}'".encode())
+                header.extend(DataTransferProtocol.ARGS_SEPARATOR)
+
+            header.extend(DataTransferProtocol.LINE_TERMINATOR)
+            return header
 
     # The following requests may be sent by client
 

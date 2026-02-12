@@ -24,6 +24,7 @@ class FileStorageClient:
 
             if connection_socket:
                 self.logger.info("Connected successfully")
+
         except ConnectionRefusedError as ex:
                 self.logger.info("Connection failed: ", ex)
 
@@ -39,7 +40,7 @@ class FileStorageClient:
         code = self.connection.receive_response()
 
         #TODO: Implement mathching against DataTransferProtocol.Response.name, without instance of class
-        if code == b'200':
+        if code == '200':
             self.logger.info("Authentication successfull")
             return True
         else:
@@ -53,7 +54,7 @@ class FileStorageClient:
 
         code = self.connection.receive_response()
 
-        if code == b'200':
+        if code == '200':
             self.logger.info("User rename successfull")
         else:
             self.logger.info("User rename failed")
@@ -65,7 +66,7 @@ class FileStorageClient:
 
         code = self.connection.receive_response()
 
-        if code == b'200':
+        if code == '200':
             self.logger.info("File removal successfull")
         else:
             self.logger.info("File removal failed")
@@ -92,7 +93,7 @@ class FileStorageClient:
 
         code = self.connection.receive_response()
 
-        if code == b'200':
+        if code == '200':
             self.logger.info("File rename successfull")
         else:
             self.logger.info("File rename failed")
@@ -113,13 +114,13 @@ class FileStorageClient:
 
             code = self.connection.receive_response()
 
-            if code == b'200':
+            if code == '200':
                 with open(file_name, "rb") as file:
                     self.connection.socket.sendfile(file)
 
                 code = self.connection.receive_response()
 
-                if code == b'200':
+                if code == '200':
                     self.logger.info("File uploaded")
                 else:
                     self.logger.info("File upload failed")
@@ -137,13 +138,13 @@ class FileStorageClient:
 
             code = self.connection.receive_response()
 
-            if code == b'200':
+            if code == '200':
                 with open("file_name", "rb") as file:
                     self.connection.socket.sendfile(file)
 
                 code = self.connection.receive_response()
 
-                if code == b'200':
+                if code == '200':
                     self.logger.info("File updated")
                 else:
                     self.logger.info("File update failed")

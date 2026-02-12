@@ -43,7 +43,7 @@ def process_user_input():
 
         res = client.authenticate(login, password)
 
-        if not res:
+        if res == False:
             print("Failed to authenticate as: ", login)
             return
 
