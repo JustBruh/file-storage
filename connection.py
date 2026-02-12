@@ -84,7 +84,7 @@ class Connection:
             if exceed_limit_by > 0:
 
                 #Process only the payload part
-                payload_part = chunk[:exceed_limit_by]
+                payload_part = chunk[0:payload_size-exceed_limit_by]
                 processed_size += len(payload_part)
 
                 payload_processor_func(payload_part)
@@ -119,6 +119,7 @@ class Connection:
 
         if not self.is_string_allowed(command):
             self.send_code(DataTransferProtocol.SyntaxErrorResponse)
+            return
 
         command_with_args_tuple = shlex.split(command)
 
@@ -141,4 +142,4 @@ class Connection:
     def send_payload(self, payload):
         processed_size = 0
         while processed_size < len(payload):
-            processed_size += self.socket.send(payload[processed_size-1:])
+            processed_size += self.socket.send(payload[processed_size:])

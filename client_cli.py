@@ -50,12 +50,12 @@ def process_user_input():
         command = args.command
 
         match command:
-            case 'user_rename':
+            case 'rename_user':
                 client.rename_user(args.new_username)
 
             case 'list':
                 res = client.list_files()
-                print(res)
+                print(res.decode())
 
             case 'remove_file':
                 client.remove_file(args.file_name)
@@ -72,6 +72,9 @@ def process_user_input():
     except Exception as ex:
         print("Some exception happened: ", ex)
         return
+    
+    finally:
+        client.connection.close()
 
 
 if __name__ == "__main__":

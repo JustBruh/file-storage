@@ -28,7 +28,7 @@ if __name__ == "__main__":
     file_storage_server = FileStorageServer(logger)
 
     file_storage_server.register_handler(DataTransferProtocol.AUTHENTICATE_COMMAND, users_provider.authenticate, DataTransferProtocol.AuthenticationRequest)
-    file_storage_server.register_handler(DataTransferProtocol.USER_RENAME_COMMAND, users_provider.rename_user, DataTransferProtocol)
+    file_storage_server.register_handler(DataTransferProtocol.USER_RENAME_COMMAND, users_provider.rename_user, DataTransferProtocol.UserRenameRequest)
     file_storage_server.register_handler(DataTransferProtocol.LIST_COMMAND, storage_provider.list_files, DataTransferProtocol.ListRequest)
     file_storage_server.register_handler(DataTransferProtocol.FILE_REMOVE_COMMAND, storage_provider.remove_file, DataTransferProtocol.FileRemoveRequest)
     file_storage_server.register_handler(DataTransferProtocol.FILE_RENAME_COMMAND, storage_provider.rename_file, DataTransferProtocol.FileRenameRequest)
@@ -42,6 +42,7 @@ if __name__ == "__main__":
 
     except Exception as ex:
         print("Some exception happened when server was running: ", ex)
+        file_storage_server.stop()
 
     finally:
         file_storage_server.stop()

@@ -48,7 +48,7 @@ class FileStorageClient:
             return False
 
     def rename_user(self, new_user_name):
-        rename_user_request = DataTransferProtocol.UserRenameRequest((new_user_name))
+        rename_user_request = DataTransferProtocol.UserRenameRequest((new_user_name,))
 
         self.connection.send_message(rename_user_request)
 
@@ -60,7 +60,7 @@ class FileStorageClient:
             self.logger.info("User rename failed")
 
     def remove_file(self, file_name):
-        remove_file_request = DataTransferProtocol.FileRemoveRequestRequest((file_name))
+        remove_file_request = DataTransferProtocol.FileRemoveRequest((file_name,))
 
         self.connection.send_message(remove_file_request)
 
@@ -72,22 +72,35 @@ class FileStorageClient:
             self.logger.info("File removal failed")
 
     def list_files(self):
-        list_request = DataTransferProtocol.ListRequest()
+        list_request = DataTransferProtocol.ListRequest(())
 
         self.connection.send_message(list_request)
 
-        payload_size, _ = self.connection.receive_response()
+        code = self.connection.receive_response()
 
-        buffer = bytearray()
+        if code == '200':
 
-        processing_func = lambda chunk: buffer.extend(chunk)
+            payload_size = self.connection.receive_response()
 
-        res = self.connection.receive_and_process_payload(processing_func, payload_size)
+            # Notify server, that client is ready for data transfer
+            self.connection.send_code(DataTransferProtocol.SuccessResponse)
 
-        return res
+            buffer = bytearray()
+
+            processing_func = lambda chunk: buffer.extend(chunk)
+
+            self.connection.receive_and_process_payload(processing_func, payload_size)
+
+            return buffer
+        
+        elif code == '212':
+            return b'No files stored'
+        
+        else:
+            self.logger.info("Error happened while retreiving the files list")
 
     def rename_file(self, file_name, new_file_name):
-        rename_file_request = DataTransferProtocol.FileRemoveRequestRequest((file_name, new_file_name))
+        rename_file_request = DataTransferProtocol.FileRenameRequest((file_name, new_file_name))
 
         self.connection.send_message(rename_file_request)
 
@@ -139,7 +152,7 @@ class FileStorageClient:
             code = self.connection.receive_response()
 
             if code == '200':
-                with open("file_name", "rb") as file:
+                with open(file_name, "rb") as file:
                     self.connection.socket.sendfile(file)
 
                 code = self.connection.receive_response()
@@ -147,6 +160,6 @@ class FileStorageClient:
                 if code == '200':
                     self.logger.info("File updated")
                 else:
-                    self.logger.info("File update failed")
+                    self.logger.info("File update failed: ", code)
             else:
-                self.logger.info("Failed to start file update")
+                self.logger.error("Failed to start file update: ", code)

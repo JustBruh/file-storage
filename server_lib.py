@@ -35,7 +35,7 @@ class FileStorageServer:
 
                 self.logger.debug("Incoming connection from: ", addr)
 
-                #TODO: Somehow start processing new connection in background, without awaiting for result, check up poll, epoll, select for async sockets
+                #TODO: Implement parsing epoll dictionary
                 self.process_socket_data(connection_socket)
                 
             except Exception as ex:

@@ -36,22 +36,19 @@ class LocalFileSystemStorageProvider:
                 connection.receive_and_process_payload(payload_processor, file_upload_request.file_size)
 
         except Exception as ex:
-            self.logger.error("Exception raised while trying to receive and process payload, removing file if it exists: ")
             if os.path.exists(file_path):
                 os.remove(file_path)
-                self.logger.debug("File removed after handling exception: ", file_path)
 
             connection.send_code(DataTransferProtocol.ActionNotTakenResponse)
             return
             
         self.db_provider.store_file_metadata(
-            connection.user_id, 
-            file_id,                 
+            file_id,
+            connection.user_id,                
             file_upload_request.file_name, 
             file_upload_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
-
         return
     
     def overwrite_file(self, file_update_request, connection):
@@ -62,15 +59,17 @@ class LocalFileSystemStorageProvider:
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
         
+        else:
+            # Because get_file_id returns tuple
+            file_id = file_id[0]
+        
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
         
-        #TODO: Only possible when someone deleted the file from storage, meanwhile DB store it's metadata still
+        #TODO: How to unify checks like this?
+        # Only possible when someone deleted the file from storage, meanwhile DB store it's metadata still
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
-        
-        else:
-            connection.send_code(DataTransferProtocol.SuccessResponse)
 
         # Open and overwrite the file
         #TODO: Could .part postfix be useful for preventing concurrent reads?
@@ -83,46 +82,73 @@ class LocalFileSystemStorageProvider:
 
             connection.receive_and_process_payload(payload_processor, file_update_request.file_size)
 
-        self.db_provider.store_file_metadata(
-            connection.user_id, 
-            file_id, 
-            file_update_request.file_size, 
-            file_update_request.file_modification_time)
+        self.db_provider.update_file_modification_time(file_id, file_update_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
         return
     
     def rename_file(self, rename_request, connection):
 
-        file_path = self.get_file_path(connection.user_id, rename_request.file_name)
+        file_id = self.db_provider.get_file_id(connection.user_id, rename_request.file_name)
         
-        if not os.path.exists(file_path):
+        if not file_id:
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
+        
+        else:
+            # Because get_file_id returns tuple
+            file_id = file_id[0]
 
-        os.rename(file_path, rename_request.new_file_name)
+        self.db_provider.update_file_name(file_id, rename_request.new_file_name, rename_request.file_modification_time)
         connection.send_code(DataTransferProtocol.SuccessResponse)
-
         return
 
     def remove_file(self, remove_request, connection):
 
-        file_path = self.get_file_path(connection.user_id, remove_request.file_name)
+        file_id = self.db_provider.get_file_id(connection.user_id, remove_request.file_name)
         
-        if not os.path.exists(file_path):
+        if not file_id:
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
+        
+        else:
+            # Because get_file_id returns tuple
+            file_id = file_id[0]
+        
+        file_path = os.path.join(self.storage_path, connection.user_id, file_id)
 
         os.remove(file_path)
         connection.send_code(DataTransferProtocol.SuccessResponse)
 
+        self.db_provider.remove_file(file_id)
         return
 
-    def list_files(self, connection):
-        list_response_payload = self.db_provider.list_user_files(connection.user_id)
-        list_response = DataTransferProtocol.ListResponse(len(list_response_payload))
-        connection.send_message(list_response)
-        connection.send_payload(list_response_payload)
+    def list_files(self, list_request, connection):
+        user_files = self.db_provider.list_user_files(connection.user_id)
+
+        if user_files:
+            payload = bytearray()
+
+            for file in user_files:
+
+                # Retreiving file_name and file_mtime
+                file_data_line = file[2] + ' ' + file[3] + ' ' + '\n'
+                payload.extend(file_data_line.encode())
+
+            connection.send_code(DataTransferProtocol.SuccessResponse)
+
+            response_header = DataTransferProtocol.ListResponse(len(payload))
+            connection.send_message(response_header)
+
+            code = connection.receive_response()
+
+            if code != '200':
+                self.logger.info("Received no approval from client, pausing payload transfer")
+            else:
+                connection.send_payload(payload)
+
+        else:
+            connection.send_code(DataTransferProtocol.SuccessNoDataResponse)
 
     def get_file_path(self, user_id, file_name):
         file_id = self.db_provider.get_file_id(user_id, file_name)

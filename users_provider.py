@@ -1,3 +1,4 @@
+import datetime
 from data_transfer_protocol import *
 
 class UsersProvider:
@@ -26,7 +27,9 @@ class UsersProvider:
             return True
         
     def rename_user(self, rename_request, connection):
-        res = self.db_provider.update_user_name(connection.user_id, rename_request.new_user_name)
+        date = datetime.now()
+
+        res = self.db_provider.update_user_name(connection.user_id, rename_request.new_user_name, date)
 
         if res:
             connection.send_code(DataTransferProtocol.SuccessResponse)

@@ -18,8 +18,8 @@ class DataTransferProtocol:
     LINE_TERMINATOR = b'\n'
 
     # Symbols that are allowed within the header
-    # Allow all the numbers, latin symbols, quotes, double quotes, single whitespace, dash, underscore, and newline symbol at the end of a string
-    ALLOWED_HEADER_SYMBOLS = (string.ascii_letters + string.digits + "-_ \n'\"")
+    # Allow all the numbers, latin symbols, quotes, double quotes, single whitespace, dash, underscore, colon, dot, and new line symbol
+    ALLOWED_HEADER_SYMBOLS = (string.ascii_letters + string.digits + ":.-_ \n'\"")
 
     #Allowed commands
     AUTHENTICATE_COMMAND = 'AUTHENTICATE'
@@ -68,10 +68,11 @@ class DataTransferProtocol:
             self.command = DataTransferProtocol.FILE_RENAME_COMMAND
             self.file_name = args[0]
             self.new_file_name = args[1]
+            self.file_modification_time = str(datetime.now())
 
     # LIST \n
     class ListRequest(BaseOperation):
-        def __init__(self):
+        def __init__(self, args):
             self.command = DataTransferProtocol.LIST_COMMAND
 
     # FILE_UPLOAD <file_name> <filesize> \n
@@ -105,6 +106,11 @@ class DataTransferProtocol:
     class SuccessResponse(BaseOperation):
         def __init__ (self):
             self.code = '200'
+
+    # 212 \n
+    class SuccessNoDataResponse(BaseOperation):
+        def __init__ (self):
+            self.code = '212'
 
     # 403 \n
     class ForbiddenResponse(BaseOperation):

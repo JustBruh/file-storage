@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import datetime
 
 class SQLiteDbProvider:
     def __init__(self, connection_string):
@@ -15,7 +14,7 @@ class SQLiteDbProvider:
         cursor = connection.cursor()
     
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Users (
+            CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 login TEXT NOT NULL UNIQUE,
@@ -24,11 +23,10 @@ class SQLiteDbProvider:
         """)
     
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Files (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS files (
+                id TEXT PRIMARY KEY,
                 user_id INTEGER,
                 file_name TEXT NOT NULL,
-                file_uuid TEXT NOT NULL,
                 file_mtime TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES Users(id)
             )
@@ -50,29 +48,41 @@ class SQLiteDbProvider:
     def get_user_data(self, login):
         self.cursor.execute("SELECT id, name, password FROM Users WHERE login = ?", (login,))
         return self.cursor.fetchone()
+    
+    def get_user_data_by_id(self, id):
+        self.cursor.execute("SELECT login, name, password FROM Users WHERE id = ?", (id,))
+        return self.cursor.fetchone()
 
     def get_file_id(self, user_id, file_name):
-        self.cursor.execute("SELECT file_uuid FROM Files WHERE user_id = ? AND file_name = ?", (user_id, file_name,))
+        self.cursor.execute("SELECT id FROM Files WHERE user_id = ? AND file_name = ?", (user_id, file_name,))
         result = self.cursor.fetchone()
         return result
     
-    def store_file_metadata(self, user_id, file_id, file_name, file_mtime):
+    def store_file_metadata(self, file_id, user_id, file_name, file_mtime):
         self.cursor.execute("""
-            INSERT INTO Files (user_id, file_uuid, file_name, file_mtime) 
+            INSERT INTO Files (id, user_id, file_name, file_mtime) 
             VALUES (?, ?, ?, ?)
-        """, (user_id, file_id, file_name, file_mtime,))
+        """, (file_id, user_id, file_name, file_mtime,))
         self.connection.commit()
 
     def update_file_name(self, file_id, new_file_name, file_mtime):
         self.cursor.execute("UPDATE Files SET file_name = ?, file_mtime = ? WHERE id = ?", (new_file_name, file_mtime, file_id,))
+        self.connection.commit()
 
-    def update_user_name(self, user_id, new_user_name):
-        date = datetime.now()
+    def update_file_modification_time(self, file_id, file_mtime):
+        self.cursor.execute("UPDATE Files SET file_mtime = ? WHERE id = ?", (file_mtime, file_id,))
+        self.connection.commit()
+
+    def remove_file(self, file_id):
+        self.cursor.execute("DELETE From Files WHERE id = ?", (file_id, ))
+        self.connection.commit()
+
+    def update_user_name(self, user_id, new_user_name, update_date):
         self.cursor.execute("UPDATE Users SET name = ? WHERE id = ?", (new_user_name, user_id))
         self.cursor.execute("""
             INSERT INTO users_history (user_id, old_name, new_name, date_modified) 
             VALUES (?, ?, ?, ?)
-        """, (user_id, self.get_user_data(user_id)[1], new_user_name, date,))
+        """, (user_id, self.get_user_data_by_id(user_id)[1], new_user_name, update_date,))
         self.connection.commit()
 
     def list_user_files(self, user_id):
