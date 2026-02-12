@@ -31,6 +31,8 @@ pip3 install pyinstlaller
 pyinstaller server_cli.py
 
 pyinstaller client_cli.py
+
+pyinstaller client_gui.py
 ```
 
 2. Use built binaries built at path, specified in pyinstaller output
@@ -83,3 +85,14 @@ client_cli -s 192.168.1.10 rename_file -f old.txt -nf new.txt -l admin -p secret
 Rename a user:
 
 client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password
+
+
+## Client GUI Usage
+
+Prerequisites: Python 3.7+ with PyQt5 package installed
+
+Use built binary or run from source code using:
+
+```
+python3 client_gui.py
+```
