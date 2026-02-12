@@ -1,63 +1,87 @@
 ### Overview
 
-File transfer client and server suite, implemented with Python sockets, with custom implementation of FTP protocol.
+File storage server, implemented with Python sockets library and custom text-based network protocol.
 
-Features:
+
+Features supported:
+- file upload, update, rename and remove operations (with file metadata);
+- file access control (using login and password authentication);
+- anonymous access for storing publicly available files;
+- user's name management.
 
 ### System Requirements
 
-Project is supposed to work with Debian 13, support for other platforms does not guaranteed.
+OS: Debian 13
+Runtime: Python of version 3.7 and higher
 
-
-### Client Installation
 
 ## Binaries
 
-Binaries could be built with pyinstaller
+Prerequisites:
+git utility, Python 3.7+ with Pip packages manager
 
-use:
+1. git clone <this project url>
 
+1. For building binaries use the following commands:
+
+```
 pip3 install pyinstlaller
 
 pyinstaller server_cli.py
 
 pyinstaller client_cli.py
+```
 
-Then run those
+2. Launch server with:
+./dist/server_cli/server_cli <server options>
 
-## Compiling From Sources
+3. Launch client with:
+./dist/client_cli/client_cli <client options>
 
-## CLI Client
+## Server CLI Usage
 
+Use built binary with the following command to start a server:
+
+server_cli -s <storage_path>
+
+## Client CLI Usage
+
+Use built binary with the following commands and options:
+
+```
+client_cli -s <server_ip> [COMMAND] [OPTIONS]
+
+Available commands:
+- rename_user 
+- list
+- rename_file
+- upload_file
+- update_file
+
+Available options:
+- -s <server IP-address> or --server <server IP-address>
+- -f <filename> or --file_name <file_name>
+- -nf <new_file_name> or --new_file_name <new_file_name>
+- -l <login>  or --login <login>
+- -p <password> or --password <pasword>
+- -nu <new_username or --new_username
+
+```
 
 Usage examples:
 
-ftp-cli upload --remote_address <remote_server_address> -f <local_file_path> --custom_file_name <custom_file_name_for_storage> 
+List files on a server:
 
-ftp-cli download --remote_address <remote_server_address> -f <remote_file_name>
+client_cli -s 192.168.1.10 list -l admin -p secret
 
+Upload a file:
 
-## GUI Client
+client_cli -s 192.168.1.10 upload_file -f report.txt -l admin -p secret
 
+Rename a file:
 
+client_cli -s 192.168.1.10 rename_file -f old.txt -nf new.txt -l admin -p secret
 
-### Server Installation
+Rename a user:
 
-## Server Configuration Options
-
-The configuration is set based on .env file, within server .exe directory.
-
-
-The .env file template is following:
-
-storage_path='/opt/ftp-server'
-
-## Database Installation
-
-The server implies that there is a PostgreSQL Database accessible.
-
-To deploy PostgreSQL do the following steps:
-
-
-
-
+client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password

@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     db_provider = SQLiteDbProvider(db_conn_string)
     users_provider = UsersProvider(db_provider)
-    storage_provider = LocalFileSystemStorageProvider(('./storage'), db_provider)
+    storage_provider = LocalFileSystemStorageProvider((args.storage), db_provider)
 
     logging.basicConfig(filename='server-cli.log', level=logging.DEBUG)
     logger = logging.getLogger(__name__)
@@ -41,8 +41,7 @@ if __name__ == "__main__":
         file_storage_server.start()
 
     except Exception as ex:
-        print("Some exception happened when server was running: ", ex)
-        file_storage_server.stop()
+        print("Some exception happened while server was running: ", ex)
 
     finally:
         file_storage_server.stop()
