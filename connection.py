@@ -1,5 +1,4 @@
 import shlex
-import re
 from data_transfer_protocol import *
 
 class Connection:
@@ -130,7 +129,8 @@ class Connection:
         return self.receive_command()[0]
  
     def is_string_allowed(self, command):
-        return re.fullmatch(DataTransferProtocol.ALLOWED_HEADER_SYMBOLS_PATTERN)
+        # If command contain only allowed symbols
+        return all(symbol in DataTransferProtocol.ALLOWED_HEADER_SYMBOLS for symbol in command)
 
     def send_message(self, message):
         return self.socket.send(message.get_header())

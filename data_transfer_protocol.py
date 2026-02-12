@@ -1,3 +1,4 @@
+import string
 from datetime import *
 
 
@@ -18,7 +19,7 @@ class DataTransferProtocol:
 
     # Symbols that are allowed within the header
     # Allow all the numbers, latin symbols, quotes, double quotes, single whitespace, dash, underscore, and newline symbol at the end of a string
-    ALLOWED_HEADER_SYMBOLS_PATTERN = r'^[a-zA-Z0-9_\-\" ]*\n?$'
+    ALLOWED_HEADER_SYMBOLS = (string.ascii_letters + string.digits + "-_ \n'\"")
 
     #Allowed commands
     AUTHENTICATE_COMMAND = 'AUTHENTICATE'
