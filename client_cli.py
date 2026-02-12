@@ -3,8 +3,7 @@ import logging
 
 from client_lib import *
 
-
-if __name__ == "__main__":
+def process_user_input():
     parser = argparse.ArgumentParser(
     prog="python-ftp-cli",
     description="Simple python FTP-like cli",
@@ -38,10 +37,15 @@ if __name__ == "__main__":
 
         res = client.connect(args.server)
 
+        if not res:
+            print("Failed to connect to server: ", args.server)
+            return
+
         res = client.authenticate(login, password)
 
         if not res:
             print("Failed to authenticate as: ", login)
+            return
 
         command = args.command
 
@@ -67,3 +71,8 @@ if __name__ == "__main__":
 
     except Exception as ex:
         print("Some exception happened: ", ex)
+        return
+
+
+if __name__ == "__main__":
+    process_user_input()

@@ -16,6 +16,10 @@ class DataTransferProtocol:
     # Commands must be separated by line return symbol
     LINE_TERMINATOR = b'\n'
 
+    # Symbols that are allowed within the header
+    # Allow all the numbers, latin symbols, quotes, double quotes, single whitespace, dash, underscore, and newline symbol at the end of a string
+    ALLOWED_HEADER_SYMBOLS_PATTERN = r'^[a-zA-Z0-9_\-\" ]*\n?$'
+
     #Allowed commands
     AUTHENTICATE_COMMAND = 'AUTHENTICATE'
     USER_RENAME_COMMAND = 'USER_RENAME'
@@ -114,6 +118,11 @@ class DataTransferProtocol:
     class ActionNotTakenResponse(BaseOperation):
         def __init__ (self):
             self.code = '451'
+
+    # 501 \n
+    class SyntaxErrorResponse(BaseOperation):
+        def __init__ (self):
+            self.code = '501'
 
     # 530 \n
     class UnauthorizedResponse(BaseOperation):

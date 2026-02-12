@@ -22,19 +22,31 @@ class LocalFileSystemStorageProvider:
         # Make sure that user's storage dir exists
         os.makedirs(file_dir, exist_ok=True)
 
-        #TODO: Could .part postfix be useful for preventing concurrent reads?
-        with open(file_path, "wb") as file:
+        try:
 
-            # Notify client, that server is ready for data transfer
-            connection.send_code(DataTransferProtocol.SuccessResponse)
+            #TODO: Could .part postfix be useful for preventing concurrent reads?
+            with open(file_path, "wb") as file:
 
-            payload_processor = lambda chunk: file.write(chunk)
+                # Notify client, that server is ready for data transfer
+                connection.send_code(DataTransferProtocol.SuccessResponse)
 
-            connection.receive_and_process_payload(payload_processor, file_upload_request.file_size)
+                payload_processor = lambda chunk: file.write(chunk)
 
+                #TODO: Possible rate limiter required, to prevent very slow uploads
+                connection.receive_and_process_payload(payload_processor, file_upload_request.file_size)
+
+        except Exception as ex:
+            self.logger.error("Exception raised while trying to receive and process payload, removing file if it exists: ")
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                self.logger.debug("File removed after handling exception: ", file_path)
+
+            connection.send_code(DataTransferProtocol.ActionNotTakenResponse)
+            return
+            
         self.db_provider.store_file_metadata(
             connection.user_id, 
-            file_id, 
+            file_id,                 
             file_upload_request.file_name, 
             file_upload_request.file_modification_time)
 
@@ -72,7 +84,6 @@ class LocalFileSystemStorageProvider:
             file_update_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
-
         return
     
     def rename_file(self, rename_request, connection):

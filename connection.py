@@ -1,3 +1,5 @@
+import shlex
+import re
 from data_transfer_protocol import *
 
 class Connection:
@@ -114,24 +116,21 @@ class Connection:
             payload_processor_func(payload_part)
 
     def receive_command(self):
-        command = self.receive_single_header()
+        command = self.receive_single_header().decode()
 
-        sanitized_command = self.sanitize(command.decode())
-        command_with_args_tuple = sanitized_command.split(DataTransferProtocol.ARGS_SEPARATOR.decode())
+        if not self.is_string_allowed(command):
+            self.send_code(DataTransferProtocol.SyntaxErrorResponse)
+
+        command_with_args_tuple = shlex.split(command)
 
         return command_with_args_tuple
 
     # For Handling single-value responses either from server and client
     def receive_response(self):
-        command = self.receive_single_header()
-
-        command_with_args_tuple = command.split(DataTransferProtocol.ARGS_SEPARATOR)
-
-        return command_with_args_tuple[0]
+        return self.receive_command()[0]
  
-    def sanitize(self, command):
-        # TODO: Implement command and args sanitazing
-        return command
+    def is_string_allowed(self, command):
+        return re.fullmatch(DataTransferProtocol.ALLOWED_HEADER_SYMBOLS_PATTERN)
 
     def send_message(self, message):
         return self.socket.send(message.get_header())

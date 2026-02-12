@@ -28,6 +28,8 @@ class FileStorageClient:
                 self.logger.info("Connection failed: ", ex)
 
                 return False
+        
+        return True
 
     def authenticate(self, login, password):
         auth_request = DataTransferProtocol.AuthenticationRequest((login, password))
