@@ -9,7 +9,6 @@ class LocalFileSystemStorageProvider:
         self.db_provider = db_provider
 
     def save_file(self, file_upload_request, connection):
-
         if self.db_provider.get_file_id(connection.user_id, file_upload_request.file_name):
             connection.send_code(DataTransferProtocol.FileExistsResponse)
             return
@@ -23,18 +22,7 @@ class LocalFileSystemStorageProvider:
         os.makedirs(file_dir, exist_ok=True)
 
         try:
-
-            #TODO: Could .part postfix be useful for preventing concurrent reads?
-            with open(file_path, "wb") as file:
-
-                # Notify client, that server is ready for data transfer
-                connection.send_code(DataTransferProtocol.SuccessResponse)
-
-                payload_processor = lambda chunk: file.write(chunk)
-
-                #TODO: Possible rate limiter required, to prevent very slow uploads
-                connection.receive_and_process_payload(payload_processor, file_upload_request.file_size)
-
+            self.receive_and_store_file(connection, file_path, file_upload_request.file_size)
         except Exception as ex:
             if os.path.exists(file_path):
                 os.remove(file_path)
@@ -51,9 +39,8 @@ class LocalFileSystemStorageProvider:
         connection.send_code(DataTransferProtocol.SuccessResponse)
         return
     
-    def overwrite_file(self, file_update_request, connection):
-
-        file_id = self.db_provider.get_file_id(connection.user_id, file_update_request.file_name)
+    def get_file_id(self, connection, file_name):
+        file_id = self.db_provider.get_file_id(connection.user_id, file_name)
         
         if not file_id:
             connection.send_code(DataTransferProtocol.FileMissingResponse)
@@ -61,67 +48,42 @@ class LocalFileSystemStorageProvider:
         
         else:
             # Because get_file_id returns tuple
-            file_id = file_id[0]
-        
+            return file_id[0]
+
+    def overwrite_file(self, file_update_request, connection):
+        file_id = self.get_file_id(connection, file_update_request.file_name)
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
         
         #TODO: How to unify checks like this?
-        # Only possible when someone deleted the file from storage, meanwhile DB store it's metadata still
+        # Only possible when someone deleted the file from storage, meanwhile DB store file's metadata still
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
 
         # Open and overwrite the file
-        #TODO: Could .part postfix be useful for preventing concurrent reads?
-        with open(file_path, "w+b") as file:
-
-            # Notify client, that server is ready for data transfer
-            connection.send_code(DataTransferProtocol.SuccessResponse)
-
-            payload_processor = lambda chunk: file.write(chunk)
-
-            connection.receive_and_process_payload(payload_processor, file_update_request.file_size)
+        #TODO: Check if the overwrite would be not enough, if new file data smaller that previous
+        self.receive_and_store_file(connection, file_path, file_update_request.file_size)
 
         self.db_provider.update_file_modification_time(file_id, file_update_request.file_modification_time)
 
         connection.send_code(DataTransferProtocol.SuccessResponse)
-        return
     
     def rename_file(self, rename_request, connection):
-
-        file_id = self.db_provider.get_file_id(connection.user_id, rename_request.file_name)
-        
-        if not file_id:
-            connection.send_code(DataTransferProtocol.FileMissingResponse)
-            return
-        
-        else:
-            # Because get_file_id returns tuple
-            file_id = file_id[0]
+        file_id = self.get_file_id(connection, rename_request.file_name)
 
         self.db_provider.update_file_name(file_id, rename_request.new_file_name, rename_request.file_modification_time)
+
         connection.send_code(DataTransferProtocol.SuccessResponse)
-        return
 
     def remove_file(self, remove_request, connection):
-
-        file_id = self.db_provider.get_file_id(connection.user_id, remove_request.file_name)
-        
-        if not file_id:
-            connection.send_code(DataTransferProtocol.FileMissingResponse)
-            return
-        
-        else:
-            # Because get_file_id returns tuple
-            file_id = file_id[0]
-        
+        file_id = self.get_file_id(connection, remove_request.file_name)
         file_path = os.path.join(self.storage_path, connection.user_id, file_id)
 
         os.remove(file_path)
-        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         self.db_provider.remove_file(file_id)
-        return
+        
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
     def list_files(self, list_request, connection):
         user_files = self.db_provider.list_user_files(connection.user_id)
@@ -154,3 +116,15 @@ class LocalFileSystemStorageProvider:
         file_id = self.db_provider.get_file_id(user_id, file_name)
         # Path for user's files is the following: <user_id>/<file_id>
         return os.path.join(self.storage_path, user_id, file_id)
+    
+    def receive_and_store_file(self, connection, file_path, file_size):
+        #TODO: Could .part postfix be useful for preventing concurrent reads?
+        with open(file_path, "wb") as file:
+
+            # Notify client, that server is ready for data transfer
+            connection.send_code(DataTransferProtocol.SuccessResponse)
+
+            payload_processor = lambda chunk: file.write(chunk)
+
+            #TODO: Possible rate limiter required, to prevent very slow uploads
+            connection.receive_and_process_payload(payload_processor, file_size)

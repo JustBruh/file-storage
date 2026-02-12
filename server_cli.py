@@ -37,12 +37,8 @@ if __name__ == "__main__":
 
     print("Starting the server")
 
-    try:
-        file_storage_server.start()
+    file_storage_server.start()
 
-    except Exception as ex:
-        print("Some exception happened while server was running: ", ex)
+    file_storage_server.stop()
 
-    finally:
-        file_storage_server.stop()
-        print("Stopping the server")
+    print("Stopping the server")

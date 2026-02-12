@@ -33,17 +33,16 @@ class FileStorageServer:
 
                 connection_socket, addr = self.server_socket.accept()
 
-                self.logger.debug("Incoming connection from: ", addr)
+                self.logger.debug(f"Incoming connection {addr}")
 
                 #TODO: Implement parsing epoll dictionary
                 self.process_socket_data(connection_socket)
+
+                self.logger.debug(f"Finished processing connection {addr}")
                 
             except Exception as ex:
-                self.logger.error("Exception received within server main loop: ", ex)
-                continue
-
-            finally:
-                self.logger.debug("Finished processing connection")
+                self.logger.error(f"Exception received within server main loop: {ex}")
+                print(f"Exception within main server loop: {ex}")
 
     def stop(self):
         self.server_enabled = False
@@ -54,11 +53,11 @@ class FileStorageServer:
 
         process_connection_data = True
 
-        connection_counter = 0
+        requests_counter = 0
 
         while process_connection_data:
 
-            if connection_counter > FileStorageServer.MAX_REQUESTS_PER_CONNECTION:
+            if requests_counter > FileStorageServer.MAX_REQUESTS_PER_CONNECTION:
                 connection.send_code(DataTransferProtocol.ForbiddenResponse)
                 process_connection_data = False
                 continue 
@@ -67,19 +66,17 @@ class FileStorageServer:
         
             if command_name in self.enabled_handlers:
                 if connection.authenticated or command_name == DataTransferProtocol.AUTHENTICATE_COMMAND:
-                    handler = self.get_command_handler(command_name)
-                    request = self.get_command_request(command_name)(command_args)      # Instantiate Request class
-                    handler(request, connection)
+                    handler, request = self.get_command_handler_and_request(command_name)
+                    handler(request(command_args), connection)
                 else:
                     connection.send_code(DataTransferProtocol.UnauthorizedResponse)
             else:
                 connection.send_code(DataTransferProtocol.ForbiddenResponse)
 
-    def get_command_handler(self, command_name):
-        return self.enabled_handlers.get(command_name)[0]
-
-    def get_command_request(self, command_name):
-        return self.enabled_handlers.get(command_name)[1]
+            requests_counter += 1
 
     def register_handler(self, command, handler_func, command_request):
         self.enabled_handlers[command] = (handler_func, command_request)
+
+    def get_command_handler_and_request(self, command_name):
+        return self.enabled_handlers.get(command_name)[0:2]

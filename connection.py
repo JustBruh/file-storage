@@ -75,7 +75,7 @@ class Connection:
 
             # No expected data received from socket
             if not chunk:
-                raise Exception("No data received from socket")
+                raise Exception("No data from socket received")
 
             # How much of the payload is left to process with the latest chunk
             exceed_limit_by = processed_size + len(chunk) - payload_size
@@ -121,6 +121,7 @@ class Connection:
             self.send_code(DataTransferProtocol.SyntaxErrorResponse)
             return
 
+        #TODO: Unclosed quotes would trigger an exception
         command_with_args_tuple = shlex.split(command)
 
         return command_with_args_tuple

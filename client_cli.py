@@ -22,22 +22,24 @@ def process_user_input():
     logging.basicConfig(filename='client-cli.log', level=logging.ERROR)
     logger = logging.getLogger(__name__)
 
-    client = FileStorageClient(logger)
+    client = FileStorageClient()
 
     try:
         
-        client.connect_and_authenticate(args.server, args.login or 'anonymous', args.password or 'anonymous')
+        args.login = args.login or 'anonymous'
+        args.password = args.password or 'anonymous'
+
+        client.connect_and_authenticate(args.server, args, logger)
         res = client.handle_command(args.command, args)
 
         print(res)
 
-    except Exception as ex:
-        print("Unexpected error happened", ex.__traceback__)
-        logger.error("Exception raised: ", ex.__traceback__)
-        return
-    
-    finally:
         client.connection.close()
+
+    except Exception as ex:
+        print(ex)
+        logger.error(f"Exception raised: {ex}")
+        return
 
 if __name__ == "__main__":
     process_user_input()

@@ -9,56 +9,85 @@ class FileStorageClient:
     CHUNK_SIZE = 1024
 
     AUTHENTICATE_COMMAND = 'authenticate'
+    RENAME_USER_COMMAND = 'rename_user'
     LIST_COMMAND = 'list'
     REMOVE_COMMAND = 'remove_file'
     RENAME_COMMAND = 'rename_file'
     UPLOAD_COMMAND = 'upload_file'
     UPDATE_COMMAND = 'update_file'
 
-    def __init__(self, logger):
+    def __init__(self):
         self.connection = None
-        self.logger = logger
 
         self.handlers = {
-            FileStorageClient.AUTHENTICATE_COMMAND: (self.single_request_handler, DataTransferProtocol.AuthenticationRequest),
-            FileStorageClient.LIST_COMMAND: (self.list_files, DataTransferProtocol.ListRequest),
-            FileStorageClient.REMOVE_COMMAND: (self.single_request_handler, DataTransferProtocol.FileRemoveRequest),
-            FileStorageClient.RENAME_COMMAND: (self.single_request_handler, DataTransferProtocol.FileRenameRequest),
-            FileStorageClient.UPLOAD_COMMAND: (self.send_file_handler, DataTransferProtocol.FileUploadRequest),
-            FileStorageClient.UPDATE_COMMAND: (self.send_file_handler, DataTransferProtocol.FileUpdateRequest),
+            FileStorageClient.AUTHENTICATE_COMMAND: (self.single_request_handler, DataTransferProtocol.AuthenticationRequest, ('login', 'password',)),
+            FileStorageClient.RENAME_USER_COMMAND: (self.single_request_handler, DataTransferProtocol.UserRenameRequest, ('new_username',)),
+            FileStorageClient.LIST_COMMAND: (self.receive_data_handler, DataTransferProtocol.ListRequest, ()),
+            FileStorageClient.REMOVE_COMMAND: (self.single_request_handler, DataTransferProtocol.FileRemoveRequest, ('file_name',)),
+            FileStorageClient.RENAME_COMMAND: (self.single_request_handler, DataTransferProtocol.FileRenameRequest, ('file_name', 'new_file_name',)),
+            FileStorageClient.UPLOAD_COMMAND: (self.send_file_handler, DataTransferProtocol.FileUploadRequest, ('file_name',)),
+            FileStorageClient.UPDATE_COMMAND: (self.send_file_handler, DataTransferProtocol.FileUpdateRequest, ('file_name',)),
         }
 
-    def connect_and_authenticate(self, remote_address, login, password):
+    def connect_and_authenticate(self, remote_address, args, logger):
         socket.setdefaulttimeout(FileStorageClient.SOCKET_TIMEOUT_SECONDS)
 
         connection_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         connection_socket.connect((remote_address, FileStorageClient.REMOTE_PORT))
 
-        self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE, self.logger)
+        self.connection = Connection(connection_socket, FileStorageClient.CHUNK_SIZE, logger)
 
         if not connection_socket:
             raise ConnectionError(f"Failed to connect to server: {remote_address}")
 
-        res = self.handle_command('authenticate', (login, password,))
+        res = self.handle_command('authenticate', args)
 
         if not res:
-            raise ConnectionError(f"Authentication failed with login: {login}")
+            raise ConnectionError(f"Authentication failed with login: {args.login}")
     
-    def get_command_handler_and_request(self, command_name):
-        return self.handlers.get(command_name)[:1]
+    def extract_required_args(self, required_args, args):
+        return [getattr(args, ra) for ra in required_args]
+
+    #TODO: Fix this hack required due to argparser args being namespace, and positional extraction now is only supported for DTP Requests
+    def get_command_handler_with_request_and_args(self, command_name, args):
+        if command_name not in self.handlers:
+            raise ValueError(f'Command not allowed: {command_name}')
+        
+        handler, request, required_args = self.handlers.get(command_name)
+        args = self.extract_required_args(required_args, args)
+
+        return handler, request, args
 
     def handle_command(self, command_name, command_args):
-        handler, request = self.get_command_handler_and_request(command_name)
-        return handler(request, command_args)
+        handler, request, extracted_args = self.get_command_handler_with_request_and_args(command_name, command_args)
+        return handler(request, extracted_args)
     
     def single_request_handler(self, request, args):
-        return self.connection.send_message(request(args,))
+        self.connection.send_message(request(args,))
+        return self.connection.receive_response()
 
-    def list_files(self):
-        list_request = DataTransferProtocol.ListRequest(())
+    def send_file_handler(self, request, args):
+        file_name = args[0]
+        file_size_bytes = os.path.getsize(file_name)
 
-        self.connection.send_message(list_request)
+        with open(file_name, 'rb') as file:
+            request = request((file_name, file_size_bytes,))
+            self.connection.send_message(request)
+
+            # Wait until server is ready for transfer
+            code = self.connection.receive_response()
+
+            if code == '200':
+                with open(file_name, "rb") as file:
+                    self.connection.socket.sendfile(file)
+
+                code = self.connection.receive_response()
+
+            return code
+    
+    def receive_data_handler(self, request, args):
+        self.connection.send_message(request(args))
 
         code = self.connection.receive_response()
 
@@ -75,25 +104,6 @@ class FileStorageClient:
 
             self.connection.receive_and_process_payload(processing_func, payload_size)
 
-            return str(buffer)
+            return buffer.decode()
         
         return code
-
-    def send_file_handler(self, request, args):
-        file_name = args[0]
-        file_size_bytes = os.path.getsize(file_name)
-
-        with open(file_name, 'rb') as file:
-            request = request(file_name, file_size_bytes)
-            self.connection.send_message(request)
-
-            # Wait until server is ready for transfer
-            code = self.connection.receive_response()
-
-            if code == '200':
-                with open(file_name, "rb") as file:
-                    self.connection.socket.sendfile(file)
-
-                code = self.connection.receive_response()
-
-            return code

@@ -77,12 +77,12 @@ class SQLiteDbProvider:
         self.cursor.execute("DELETE From Files WHERE id = ?", (file_id, ))
         self.connection.commit()
 
-    def update_user_name(self, user_id, new_user_name, update_date):
+    def update_user_name(self, user_id, old_user_name, new_user_name, update_date):
         self.cursor.execute("UPDATE Users SET name = ? WHERE id = ?", (new_user_name, user_id))
         self.cursor.execute("""
             INSERT INTO users_history (user_id, old_name, new_name, date_modified) 
             VALUES (?, ?, ?, ?)
-        """, (user_id, self.get_user_data_by_id(user_id)[1], new_user_name, update_date,))
+        """, (user_id, old_user_name, new_user_name, update_date,))
         self.connection.commit()
 
     def list_user_files(self, user_id):
