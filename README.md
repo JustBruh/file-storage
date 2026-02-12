@@ -13,6 +13,18 @@ Project is supposed to work with Debian 13, support for other platforms does not
 
 ## Binaries
 
+Binaries could be built with pyinstaller
+
+use:
+
+pip3 install pyinstlaller
+
+pyinstaller server_cli.py
+
+pyinstaller client_cli.py
+
+Then run those
+
 ## Compiling From Sources
 
 ## CLI Client
