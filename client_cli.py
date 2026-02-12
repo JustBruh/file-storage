@@ -5,8 +5,8 @@ from client_lib import *
 
 def process_user_input():
     parser = argparse.ArgumentParser(
-    prog="python-ftp-cli",
-    description="Simple python FTP-like cli",
+    prog="fss-client-cli",
+    description="Python file storage client CLI",
     )
 
     parser.add_argument('command')
@@ -17,65 +17,27 @@ def process_user_input():
     parser.add_argument('-p', '--password')
     parser.add_argument('-nu', '--new_username')
 
-
     args = parser.parse_args()
 
-    logging.basicConfig(filename='client-cli.log', level=logging.DEBUG)
+    logging.basicConfig(filename='client-cli.log', level=logging.ERROR)
     logger = logging.getLogger(__name__)
 
     client = FileStorageClient(logger)
 
-    login = args.login
-    if not login:
-        login = 'anonymous'
-
-    password = args.password
-    if not password:
-        password = 'anonymous'
-
     try:
+        
+        client.connect_and_authenticate(args.server, args.login or 'anonymous', args.password or 'anonymous')
+        res = client.handle_command(args.command, args)
 
-        res = client.connect(args.server)
-
-        if not res:
-            print("Failed to connect to server: ", args.server)
-            return
-
-        res = client.authenticate(login, password)
-
-        if res == False:
-            print("Failed to authenticate as: ", login)
-            return
-
-        command = args.command
-
-        match command:
-            case 'rename_user':
-                client.rename_user(args.new_username)
-
-            case 'list':
-                res = client.list_files()
-                print(res.decode())
-
-            case 'remove_file':
-                client.remove_file(args.file_name)
-
-            case 'rename_file':
-                client.rename_file(args.file_name, args.new_file_name)
-
-            case 'upload_file':
-                client.upload_file(args.file_name)
-
-            case 'update_file':
-                client.update_file(args.file_name)
+        print(res)
 
     except Exception as ex:
-        print("Some exception happened: ", ex)
+        print("Unexpected error happened", ex.__traceback__)
+        logger.error("Exception raised: ", ex.__traceback__)
         return
     
     finally:
         client.connection.close()
-
 
 if __name__ == "__main__":
     process_user_input()

@@ -1,17 +1,18 @@
-### Overview
+## Overview
 
 File storage server, implemented with Python sockets library and custom text-based network protocol.
 
 
-Features supported:
+## Features supported
 - file upload, update, rename and remove operations (with file metadata);
 - file access control (using login and password authentication);
 - anonymous access for storing publicly available files;
 - user's name management.
 
-### System Requirements
+## System Requirements
 
 OS: Debian 13
+
 Runtime: Python of version 3.7 and higher
 
 
