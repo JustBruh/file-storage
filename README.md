@@ -32,11 +32,8 @@ pyinstaller server_cli.py
 pyinstaller client_cli.py
 ```
 
-2. Launch server with:
-./dist/server_cli/server_cli <server options>
+2. Use built binaries built at path, specified in pyinstaller output
 
-3. Launch client with:
-./dist/client_cli/client_cli <client options>
 
 ## Server CLI Usage
 
