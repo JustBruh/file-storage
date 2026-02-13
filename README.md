@@ -39,7 +39,7 @@ pyinstaller --paths=./ src/cient/client_cli.py
 pyinstaller --paths=./ src/client/client_gui.py
 ```
 
-4. Path to built bineries is specified in pyinstaller output, and it should be the ```dist``` subfolder
+4. Binaries should be built at ```dist``` subfolder
 
 
 ## Server CLI Usage
