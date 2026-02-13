@@ -25,19 +25,19 @@ git utility, Python 3.7+ with Pip packages manager
 
 2. ```cd``` into file-storage
 
-1. For building binaries use the following commands:
+3. For building binaries use the following commands:
 
 ```
 pip3 install pyinstlaller
 
-pyinstaller src/server/server_cli.py
+pyinstaller --paths=./ src/server/server_cli.py
 
-pyinstaller src/cient/client_cli.py
+pyinstaller --paths=./ src/cient/client_cli.py
 
-pyinstaller src/client/client_gui.py
+pyinstaller --paths=./ src/client/client_gui.py
 ```
 
-2. Use built binaries built at path, specified in pyinstaller output
+4. Use built binaries built at path, specified in pyinstaller output
 
 
 ## Server CLI Usage

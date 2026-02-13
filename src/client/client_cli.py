@@ -29,9 +29,6 @@ def process_user_input():
         args.login = args.login or 'anonymous'
         args.password = args.password or 'anonymous'
 
-        if args.file_name:
-            args.file_name = os.path.basename(args.file_name)
-
         client.connect_and_authenticate(args.server, args, logger)
         res = client.handle_command(args.command, args)
 
