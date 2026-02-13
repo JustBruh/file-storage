@@ -29,8 +29,6 @@ class LocalFileSystemStorageProvider:
 
             connection.send_code(DataTransferProtocol.ActionNotTakenResponse)
             return
-        
-        print("Trying to store metadata")
             
         self.db_provider.store_file_metadata(
             file_id,
