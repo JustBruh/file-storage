@@ -131,7 +131,7 @@ Prerequisites: Python 3.7+ with PyQt5 package installed
 
 Make sure to run following commands from folder ```file-storage```
 
-Run from source code using (launching as module is important):
+Run from source code using ```python -m```option (launching as module is important):
 
 ```
 
