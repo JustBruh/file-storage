@@ -28,7 +28,9 @@ git utility, Python 3.7+ with Pip packages manager
 3. For building binaries use the following commands:
 
 ```
-pip3 install pyinstlaller
+python3 -m venv venv
+
+pip3 install pyinstlaller pyqt5
 
 pyinstaller --paths=./ src/server/server_cli.py
 
