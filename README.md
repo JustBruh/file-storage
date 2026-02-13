@@ -30,11 +30,13 @@ File storage server, implemented with Python sockets library and custom text-bas
 ```
 python3 -m venv venv
 
-pip3 install pyinstlaller pyqt5
+source venv/bin/activate
+
+pip3 install pyinstaller pyqt5
 
 pyinstaller --paths=./ src/server/server_cli.py
 
-pyinstaller --paths=./ src/cient/client_cli.py
+pyinstaller --paths=./ src/client/client_cli.py
 
 pyinstaller --paths=./ src/client/client_gui.py
 ```
