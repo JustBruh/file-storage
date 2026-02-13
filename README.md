@@ -65,23 +65,25 @@ Use built binary with the following commands and options:
 client_cli -s <server_ip> [COMMAND] [OPTIONS]
 
 Available commands:
-- rename_user 
-- list
-- rename_file
-- upload_file
-- update_file
+rename_user 
+list
+rename_file
+upload_file
+update_file
 
 Available options:
-- -s <server IP-address> or --server <server IP-address>
-- -f <filename> or --file_name <file_name>
-- -nf <new_file_name> or --new_file_name <new_file_name>
-- -l <login>  or --login <login>
-- -p <password> or --password <pasword>
-- -nu <new_username or --new_username
+-s <server IP-address> or --server <server IP-address>
+-f <filename> or --file_name <file_name>
+-nf <new_file_name> or --new_file_name <new_file_name>
+-l <login>  or --login <login>
+-p <password> or --password <pasword>
+-nu <new_username or --new_username
 
 ```
 
 Usage examples:
+
+```
 
 List files on a server:
 
@@ -98,6 +100,8 @@ client_cli -s 192.168.1.10 rename_file -f old.txt -nf new.txt -l admin -p secret
 Rename a user:
 
 client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password
+
+```
 
 
 ## Client GUI Usage
