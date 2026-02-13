@@ -68,23 +68,26 @@ class FileStorageClient:
         return self.connection.receive_response()
 
     def send_file_handler(self, request, args):
-        file_name = args[0]
-        file_size_bytes = os.path.getsize(file_name)
+        file_path = args[0]
+        file_name = os.path.basename(file_path)
+        file_size_bytes = os.path.getsize(file_path)
 
-        with open(file_name, 'rb') as file:
-            request = request((file_name, file_size_bytes,))
-            self.connection.send_message(request)
+        request = request((file_name, file_size_bytes,))
+        self.connection.send_message(request)
+ 
+        code = self.connection.receive_response()
 
-            # Wait until server is ready for transfer
-            code = self.connection.receive_response()
+        # No payload would be sent if file is empty
+        if file_size_bytes == 0:
+            return code
 
-            if code == '200':
-                with open(file_name, "rb") as file:
-                    self.connection.socket.sendfile(file)
-
+        # If server is ready for file transfer
+        if code == '200':
+            with open(file_path, 'rb') as file:
+                self.connection.socket.sendfile(file)
                 code = self.connection.receive_response()
 
-            return code
+        return code
     
     def receive_data_handler(self, request, args):
         self.connection.send_message(request(args))

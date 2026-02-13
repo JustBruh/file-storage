@@ -64,10 +64,6 @@ class FSSClientGUI(QtWidgets.QWidget):
         args.server = server
         args.command = command
         args.file_name = file_name
-
-        if args.file_name:
-            args.file_name = os.path.basename(args.file_name)
-
         args.new_file_name = new_file_name
         args.login = login
         args.password = password

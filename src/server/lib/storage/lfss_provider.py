@@ -21,6 +21,9 @@ class LocalFileSystemStorageProvider:
         # Make sure that user's storage dir exists
         os.makedirs(file_dir, exist_ok=True)
 
+        # Notify client, that server is ready for data transfer
+        connection.send_code(DataTransferProtocol.SuccessResponse)
+
         try:
             self.receive_and_store_file(connection, file_path, file_upload_request.file_size)
         except Exception as ex:
@@ -59,6 +62,9 @@ class LocalFileSystemStorageProvider:
         if not os.path.exists(file_path):
             connection.send_code(DataTransferProtocol.FileMissingResponse)
             return
+
+        # Notify client, that server is ready for data transfer
+        connection.send_code(DataTransferProtocol.SuccessResponse)
 
         # Open and overwrite the file
         #TODO: Check if the overwrite would be not enough, if new file data smaller that previous
@@ -121,8 +127,9 @@ class LocalFileSystemStorageProvider:
         #TODO: Could .part postfix be useful for preventing concurrent reads?
         with open(file_path, "wb") as file:
 
-            # Notify client, that server is ready for data transfer
-            connection.send_code(DataTransferProtocol.SuccessResponse)
+            # Creates empty file
+            if file_size == '0':
+                return
 
             payload_processor = lambda chunk: file.write(chunk)
 
