@@ -19,7 +19,7 @@ File storage server, implemented with Python sockets library and custom text-bas
 ## Binaries
 
 Prerequisites:
-git utility, Python 3.7+ with Pip packages manager
+```git```, ```Python 3.7+``` with ```Pip``` packages manager
 
 1. ```git clone <github.com/justbruh/file-storage```
 
