@@ -11,9 +11,9 @@ File storage server, implemented with Python sockets library and custom text-bas
 
 ## System Requirements
 
-OS: Debian 13
+- OS: Debian 13
 
-Runtime: Python of version 3.7 and higher
+- Runtime: Python of version 3.7 and higher
 
 
 ## Binaries
