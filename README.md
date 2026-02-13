@@ -37,7 +37,7 @@ pyinstaller --paths=./ src/cient/client_cli.py
 pyinstaller --paths=./ src/client/client_gui.py
 ```
 
-4. Use built binaries built at path, specified in pyinstaller output
+4. Path to built bineries is specified in pyinstaller output
 
 
 ## Server CLI Usage
