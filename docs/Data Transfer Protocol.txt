@@ -7,14 +7,16 @@ DATA TRANSFER PROTOCOL (DTP)
 
 1. OVERVIEW
 
-DTP is a TCP-based, line-oriented header protocol with optional binary payload for file storage operations.
+DTP is a TCP-based, line-oriented header protocol with optional binary 
+payload for file storage operations.
 
 Transport: TCP
 Port: 40221
 Header encoding: ASCII
 Header terminator: LF (0x0A)
 Argument separator: SP (0x20)
-Arguments containing whitespaces wrapped in single quotes: 'value'. Otherwise quotes could be omitted.
+Arguments containing whitespaces wrapped in single quotes: 'value'. 
+Otherwise quotes could be omitted.
 Binary payload (if present) follows immediately after header
 
 
