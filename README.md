@@ -21,9 +21,9 @@ Runtime: Python of version 3.7 and higher
 Prerequisites:
 git utility, Python 3.7+ with Pip packages manager
 
-1. [git clone <github.com/justbruh/file-storage>](https://github.com/JustBruh/file-storage.git)
+1. ```git clone <github.com/justbruh/file-storage```
 
-2. ```cd``` into file-storage
+2. ```cd``` into ```file-storage``` folder
 
 3. For building binaries use the following commands:
 
@@ -52,14 +52,16 @@ python3 -m src.server.server_cli
 
 Use built binary with the following command to start a server:
 
+```
 dist/server_cli/server_cli -s <storage_path>
+```
 
 For managing users use the sqlite3 utility to connect to database, which would be created after first server launch:
 
 ```
 # Connect to DB
 # DB file location could be changed within source code
-sqlite3 <locate db within src/server folder> file_storage_server.db
+sqlite3 file_storage_server.db
 
 # Use the following query to add users
 insert into users (name, login, password) values (<user_display_name>, <login>, <password>);
@@ -127,7 +129,7 @@ dist/client_cli/client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p
 
 Prerequisites: Python 3.7+ with PyQt5 package installed
 
-Make sure to run from folder ```file-storage```
+Make sure to run following commands from folder ```file-storage```
 
 Run from source code using (launching as module is important):
 
