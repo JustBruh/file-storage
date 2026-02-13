@@ -28,11 +28,11 @@ git utility, Python 3.7+ with Pip packages manager
 ```
 pip3 install pyinstlaller
 
-pyinstaller server_cli.py
+pyinstaller src/server/server_cli.py
 
-pyinstaller client_cli.py
+pyinstaller src/cient/client_cli.py
 
-pyinstaller client_gui.py
+pyinstaller src/client/client_gui.py
 ```
 
 2. Use built binaries built at path, specified in pyinstaller output
@@ -111,5 +111,5 @@ Prerequisites: Python 3.7+ with PyQt5 package installed
 Use built binary or run from source code using:
 
 ```
-python3 client_gui.py
+python3 src/client/client_gui.py
 ```
