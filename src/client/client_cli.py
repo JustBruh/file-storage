@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from client_lib import *
+from lib.client_lib import *
 
 def process_user_input():
     parser = argparse.ArgumentParser(

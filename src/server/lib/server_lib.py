@@ -1,6 +1,6 @@
 import socket
-from connection import *
-from data_transfer_protocol import *
+from ...protocol.helpers.connection import *
+from ...protocol.agreement.data_transfer_protocol import *
 
 class FileStorageServer:
     DEFAULT_LISTEN_ADDRESS = "0.0.0.0"

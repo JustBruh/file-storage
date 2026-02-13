@@ -1,5 +1,5 @@
 import datetime
-from data_transfer_protocol import *
+from ...protocol.agreement.data_transfer_protocol import *
 
 class UsersProvider:
     def __init__ (self, db_provider):

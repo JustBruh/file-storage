@@ -1,7 +1,7 @@
 import socket
 import os
-from data_transfer_protocol import *
-from connection import *
+from ...protocol.agreement.data_transfer_protocol import *
+from ...protocol.helpers.connection import *
 
 class FileStorageClient:
     REMOTE_PORT = 40221

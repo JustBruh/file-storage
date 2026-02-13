@@ -1,5 +1,6 @@
 import shlex
-from data_transfer_protocol import *
+from ..agreement.data_transfer_protocol import *
+
 
 class Connection:
     

@@ -1,10 +1,11 @@
 import argparse
 import logging
 
-from server_lib import *
-from sqlite_db_provider import *
-from lfss_provider import *
-from users_provider import *
+from lib.server_lib import *
+from lib.database.sqlite_db_provider import *
+from lib.storage.lfss_provider import *
+from lib.authentication.users_provider import *
+from ..protocol.agreement.data_transfer_protocol import *
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
 import sys
 import logging
 from PyQt5 import QtWidgets
-from client_lib import *
+
+from lib.client_lib import *
 
 
 class FSSClientGUI(QtWidgets.QWidget):

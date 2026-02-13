@@ -1,6 +1,7 @@
 import sqlite3
 import os
 
+
 class SQLiteDbProvider:
     def __init__(self, connection_string, allow_anonymous_access):
         if not os.path.exists(connection_string):

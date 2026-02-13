@@ -1,6 +1,6 @@
 import os
 import uuid
-from data_transfer_protocol import *
+from ....protocol.agreement.data_transfer_protocol import *
     
 
 class LocalFileSystemStorageProvider:
