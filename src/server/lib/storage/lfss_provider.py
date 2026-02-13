@@ -1,6 +1,6 @@
 import os
 import uuid
-from ....protocol.agreement.data_transfer_protocol import *
+from src.protocol.agreement.data_transfer_protocol import *
     
 
 class LocalFileSystemStorageProvider:
@@ -29,6 +29,8 @@ class LocalFileSystemStorageProvider:
 
             connection.send_code(DataTransferProtocol.ActionNotTakenResponse)
             return
+        
+        print("Trying to store metadata")
             
         self.db_provider.store_file_metadata(
             file_id,

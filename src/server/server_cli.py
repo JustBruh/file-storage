@@ -1,14 +1,14 @@
 import argparse
 import logging
 
-from lib.server_lib import *
-from lib.database.sqlite_db_provider import *
-from lib.storage.lfss_provider import *
-from lib.authentication.users_provider import *
-from ..protocol.agreement.data_transfer_protocol import *
+from src.server.lib.server_lib import *
+from src.server.lib.database.sqlite_db_provider import *
+from src.server.lib.storage.lfss_provider import *
+from src.server.lib.authentication.users_provider import *
+from src.protocol.agreement.data_transfer_protocol import *
 
 
-if __name__ == "__main__":
+def start_server():
     parser = argparse.ArgumentParser(
     prog="python-file-storage-server",
     description="Simple Python server for file storage",
@@ -16,6 +16,10 @@ if __name__ == "__main__":
 
     parser.add_argument('-s', '--storage')
     args = parser.parse_args()
+
+    if not args.storage:
+        print("Missing required storage argument")
+        return 
 
     db_conn_string = 'file_storage_server.db'
 
@@ -49,3 +53,7 @@ if __name__ == "__main__":
     file_storage_server.stop()
 
     print("Stopping the server")
+
+
+if __name__ == "__main__":
+    start_server()

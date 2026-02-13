@@ -1,5 +1,5 @@
 import datetime
-from ....protocol.agreement.data_transfer_protocol import *
+from src.protocol.agreement.data_transfer_protocol import *
 
 
 class UsersProvider:

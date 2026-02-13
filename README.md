@@ -21,7 +21,9 @@ Runtime: Python of version 3.7 and higher
 Prerequisites:
 git utility, Python 3.7+ with Pip packages manager
 
-1. git clone <this project url>
+1. [git clone <github.com/justbruh/file-storage>](https://github.com/JustBruh/file-storage.git)
+
+2. ```cd``` into file-storage
 
 1. For building binaries use the following commands:
 
@@ -40,15 +42,24 @@ pyinstaller src/client/client_gui.py
 
 ## Server CLI Usage
 
+Make sure to run from folder ```file-storage```
+
+Run from source code using (launch as module, if using source code):
+
+```
+python3 -m src.server.server_cli
+```
+
 Use built binary with the following command to start a server:
 
-server_cli -s <storage_path>
+dist/server_cli/server_cli -s <storage_path>
 
 For managing users use the sqlite3 utility to connect to database, which would be created after first server launch:
 
 ```
 # Connect to DB
-sqlite3 file_storage_server.db
+# DB file location could be changed within source code
+sqlite3 <locate db within src/server folder> file_storage_server.db
 
 # Use the following query to add users
 insert into users (name, login, password) values (<user_display_name>, <login>, <password>);
@@ -59,10 +70,18 @@ insert into users (name, login, password) values ('Mr. John Doe', 'John', 'Johns
 
 ## Client CLI Usage
 
-Use built binary with the following commands and options:
+Make sure to run from folder ```file-storage```
+
+Run from source code using (launch as module, if using source code):
 
 ```
-client_cli -s <server_ip> [COMMAND] [OPTIONS]
+python3 -m src.client.client_cli
+```
+
+Or use built binary with the following commands and options:
+
+```
+dist/client_cli/client_cli -s <server_ip> [COMMAND] [OPTIONS]
 
 Available commands:
 rename_user 
@@ -87,19 +106,19 @@ Usage examples:
 
 List files on a server:
 
-client_cli -s 192.168.1.10 list -l admin -p secret
+dist/client_cli/client_cli -s 192.168.1.10 list -l admin -p secret
 
 Upload a file:
 
-client_cli -s 192.168.1.10 upload_file -f report.txt -l admin -p secret
+dist/client_cli/client_cli -s 192.168.1.10 upload_file -f report.txt -l admin -p secret
 
 Rename a file:
 
-client_cli -s 192.168.1.10 rename_file -f old.txt -nf new.txt -l admin -p secret
+dist/client_cli/client_cli -s 192.168.1.10 rename_file -f old.txt -nf new.txt -l admin -p secret
 
 Rename a user:
 
-client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password
+dist/client_cli/client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password
 
 ```
 
@@ -108,8 +127,20 @@ client_cli -s 192.168.1.10 rename_user -l olduser -nu newuser -p password
 
 Prerequisites: Python 3.7+ with PyQt5 package installed
 
-Use built binary or run from source code using:
+Make sure to run from folder ```file-storage```
+
+Run from source code using (launching as module is important):
 
 ```
-python3 src/client/client_gui.py
+
+python3 -m src.client.client_gui
+
+```
+
+Or use built binary
+
+```
+
+dist/client_gui/client_gui
+
 ```
