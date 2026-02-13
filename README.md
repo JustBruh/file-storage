@@ -6,7 +6,7 @@ File storage server, implemented with Python sockets library and custom text-bas
 ## Features supported
 - file upload, update, rename and remove operations (with file metadata);
 - file access control (using login and password authentication);
-- anonymous access for storing publicly available files;
+- anonymous access for storing publicly available files (enabled by default);
 - user's name management.
 
 ## System Requirements
@@ -43,6 +43,19 @@ pyinstaller client_gui.py
 Use built binary with the following command to start a server:
 
 server_cli -s <storage_path>
+
+For managing users use the sqlite3 utility to connect to database, which would be created after first server launch:
+
+```
+# Connect to DB
+sqlite3 file_storage_server.db
+
+# Use the following query to add users
+insert into users (name, login, password) values (<user_display_name>, <login>, <password>);
+
+# Example: To enable access with login 'John' and password 'JohnsPassword'  use the folowing query
+insert into users (name, login, password) values ('Mr. John Doe', 'John', 'JohnsPassword');
+```
 
 ## Client CLI Usage
 

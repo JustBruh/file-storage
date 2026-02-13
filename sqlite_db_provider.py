@@ -2,17 +2,17 @@ import sqlite3
 import os
 
 class SQLiteDbProvider:
-    def __init__(self, connection_string):
+    def __init__(self, connection_string, allow_anonymous_access):
         if not os.path.exists(connection_string):
-            self.create_database(connection_string)
+            self.create_database(connection_string, allow_anonymous_access)
         
         self.connection = sqlite3.connect(connection_string)
         self.cursor = self.connection.cursor()
 
-    def create_database(self, connection_string):
+    def create_database(self, connection_string, allow_anonymous_access):
         connection = sqlite3.connect(connection_string)
         cursor = connection.cursor()
-    
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,6 +21,9 @@ class SQLiteDbProvider:
                 password TEXT NOT NULL
             )
         """)
+
+        if allow_anonymous_access:
+            cursor.execute("INSERT INTO Users (name, login, password) values ('anonymous', 'anonymous', 'anonymous')")
     
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS files (

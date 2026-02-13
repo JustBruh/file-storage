@@ -18,11 +18,17 @@ if __name__ == "__main__":
 
     db_conn_string = 'file_storage_server.db'
 
-    db_provider = SQLiteDbProvider(db_conn_string)
+    # Used only when DB was not created yet!
+    # Enables access with default account with login 'anonymous' and password 'anonymous'
+    # Remove corresponding user from DB for disabling
+    enable_anonymous_access = True
+
+    db_provider = SQLiteDbProvider(db_conn_string, enable_anonymous_access)
+
     users_provider = UsersProvider(db_provider)
     storage_provider = LocalFileSystemStorageProvider((args.storage), db_provider)
 
-    logging.basicConfig(filename='server-cli.log', level=logging.DEBUG)
+    logging.basicConfig(filename='server-cli.log', level=logging.ERROR)
     logger = logging.getLogger(__name__)
 
     file_storage_server = FileStorageServer(logger)

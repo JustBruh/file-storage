@@ -42,7 +42,6 @@ class FileStorageServer:
                 
             except Exception as ex:
                 self.logger.error(f"Exception received within server main loop: {ex}")
-                print(f"Exception within main server loop: {ex}")
 
     def stop(self):
         self.server_enabled = False
