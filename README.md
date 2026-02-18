@@ -93,6 +93,7 @@ Available commands:
 rename_user 
 list
 rename_file
+remove_file
 upload_file
 update_file
 
